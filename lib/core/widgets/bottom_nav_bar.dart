@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -18,11 +19,10 @@ class BottomNavBar extends StatelessWidget {
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        // Barre du bas
         BottomNavigationBar(
           currentIndex: currentIndex,
           onTap: onTap,
-          backgroundColor: const Color(0xFF7B1A2E),
+          backgroundColor: AppColors.primaryWine,
           selectedItemColor: Colors.white,
           unselectedItemColor: Colors.white60,
           type: BottomNavigationBarType.fixed,
@@ -45,8 +45,6 @@ class BottomNavBar extends StatelessWidget {
             ),
           ],
         ),
-
-        // Bouton caméra central surélevé
         Positioned(
           top: -25,
           child: GestureDetector(
@@ -58,12 +56,12 @@ class BottomNavBar extends StatelessWidget {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFF7B1A2E),
+                  color: AppColors.primaryWine,
                   width: 3,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -71,7 +69,7 @@ class BottomNavBar extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.camera_alt,
-                color: Color(0xFF7B1A2E),
+                color: AppColors.primaryWine,
                 size: 28,
               ),
             ),

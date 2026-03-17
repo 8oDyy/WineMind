@@ -43,3 +43,22 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter related
+.flutter-plugins
+.flutter-plugins-dependencies
+*.lock
+!pubspec.lock
+
+# Environment / secrets
+.env
+.env.*
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Windsurf / Codeium
+.windsurf/
+.codeium/

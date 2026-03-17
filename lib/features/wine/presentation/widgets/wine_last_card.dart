@@ -1,26 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/wine.dart';
 
-class WineCard extends StatelessWidget {
-  final String name;
-  final String year;
-  final String type;
-  final String region;
-  final double rating;
-  final int points;
-  final String apogee;
-  final int stock;
+class WineLastCard extends StatelessWidget {
+  final Wine wine;
 
-  const WineCard({
-    super.key,
-    required this.name,
-    required this.year,
-    required this.type,
-    required this.region,
-    required this.rating,
-    required this.points,
-    required this.apogee,
-    required this.stock,
-  });
+  const WineLastCard({super.key, required this.wine});
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +13,11 @@ class WineCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -41,72 +26,59 @@ class WineCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Titre section
           const Text(
             'Dernier vin',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF7B1A2E),
+              color: AppColors.primaryWine,
             ),
           ),
           const SizedBox(height: 12),
-
-          // Image bouteille
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               width: double.infinity,
               height: 200,
-              color: const Color(0xFFF5E6C8),
+              color: AppColors.cardAccent,
               child: const Icon(
                 Icons.wine_bar,
                 size: 100,
-                color: Color(0xFF7B1A2E),
+                color: AppColors.primaryWine,
               ),
             ),
           ),
           const SizedBox(height: 12),
-
-          // Nom et année
           Text(
-            '$name $year',
+            '${wine.name} ${wine.year}',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2C2C2C),
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
-
-          // Type et région
           Row(
             children: [
               const CircleAvatar(
                 radius: 5,
-                backgroundColor: Color(0xFF7B1A2E),
+                backgroundColor: AppColors.primaryWine,
               ),
               const SizedBox(width: 6),
               Text(
-                '$type • $region',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey,
-                ),
+                '${wine.type} • ${wine.region}',
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
               ),
             ],
           ),
           const SizedBox(height: 8),
-
-          // Note + stock
           Row(
             children: [
-              // Étoiles
               Row(
                 children: List.generate(
                   5,
                   (i) => Icon(
-                    i < rating.floor() ? Icons.star : Icons.star_border,
+                    i < wine.rating.floor() ? Icons.star : Icons.star_border,
                     color: Colors.amber,
                     size: 18,
                   ),
@@ -114,12 +86,10 @@ class WineCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                '($points pts)',
+                '(${wine.points} pts)',
                 style: const TextStyle(fontSize: 13, color: Colors.grey),
               ),
               const Spacer(),
-
-              // Stock
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -127,15 +97,15 @@ class WineCard extends StatelessWidget {
                     'STOCK',
                     style: TextStyle(
                       fontSize: 10,
-                      color: Color(0xFF7B1A2E),
+                      color: AppColors.primaryWine,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   CircleAvatar(
                     radius: 14,
-                    backgroundColor: const Color(0xFF7B1A2E),
+                    backgroundColor: AppColors.primaryWine,
                     child: Text(
-                      '$stock',
+                      '${wine.stock}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -147,10 +117,8 @@ class WineCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-
-          // Apogée
           Text(
-            'APOGÉE : $apogee',
+            'APOGÉE : ${wine.apogee}',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
