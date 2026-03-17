@@ -1,44 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/wine.dart';
+import '../../domain/usecases/update_wine_stock.dart';
+import '../bloc/wine_detail_bloc.dart';
+import '../helpers/wine_type_color.dart';
+import '../pages/wine_detail_page.dart';
 
 class WineCellarCard extends StatelessWidget {
   final Wine wine;
 
   const WineCellarCard({super.key, required this.wine});
 
-  Color _typeColor() {
-    switch (wine.type) {
-      case 'Rouge':
-        return const Color(0xFF7B1A2E);
-      case 'Blanc':
-        return const Color(0xFFD4AC0D);
-      case 'Rosé':
-        return const Color(0xFFE8A0A0);
-      case 'Champagne':
-        return const Color(0xFFC5A028);
-      default:
-        return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => WineDetailBloc(
+              wine: wine,
+              updateWineStock: GetIt.instance<UpdateWineStock>(),
+            ),
+            child: const WineDetailPage(),
           ),
-        ],
+        ),
       ),
-      child: Row(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -71,7 +74,7 @@ class WineCellarCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 4,
-                      backgroundColor: _typeColor(),
+                      backgroundColor: wineTypeColor(wine.type),
                     ),
                     const SizedBox(width: 5),
                     Flexible(
@@ -126,6 +129,7 @@ class WineCellarCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
