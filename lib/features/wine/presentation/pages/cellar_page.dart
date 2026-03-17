@@ -5,6 +5,7 @@ import '../bloc/cellar_bloc.dart';
 import '../bloc/cellar_event.dart';
 import '../bloc/cellar_state.dart';
 import '../widgets/wine_cellar_card.dart';
+import 'scan_bottle_page.dart';
 
 class CellarPage extends StatefulWidget {
   const CellarPage({super.key});
@@ -202,7 +203,14 @@ class _CellarPageState extends State<CellarPage> {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () async {
+                  // TODO: exploiter le path retourné pour la reconnaissance d'étiquette
+                  await Navigator.of(context).push<String?>(
+                    MaterialPageRoute(
+                      builder: (_) => const ScanBottlePage(),
+                    ),
+                  );
+                },
                 child: Container(
                   width: 48,
                   height: 48,

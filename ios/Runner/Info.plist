@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>WineMind utilise la caméra pour scanner les étiquettes de bouteilles.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>WineMind accède à la galerie pour importer des photos d'étiquettes.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
