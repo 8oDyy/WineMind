@@ -4,6 +4,7 @@ import 'features/wine/data/repositories/wine_repository_impl.dart';
 import 'features/wine/domain/repositories/wine_repository.dart';
 import 'features/wine/domain/usecases/get_all_wines.dart';
 import 'features/wine/domain/usecases/get_last_wine.dart';
+import 'features/wine/domain/usecases/update_wine_stock.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 
@@ -27,6 +28,7 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetLastWine(sl()));
   sl.registerLazySingleton(() => GetAllWines(sl()));
+  sl.registerLazySingleton(() => UpdateWineStock(sl()));
 
   // Repository
   sl.registerLazySingleton<WineRepository>(

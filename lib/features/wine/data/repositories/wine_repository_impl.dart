@@ -96,4 +96,14 @@ class WineRepositoryImpl implements WineRepository {
       return Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Wine>> updateWineStock(String wineName, int newStock) async {
+    try {
+      final wine = await localDataSource.updateWineStock(wineName, newStock);
+      return Right(wine);
+    } on CacheException {
+      return Left(CacheFailure());
+    }
+  }
 }
