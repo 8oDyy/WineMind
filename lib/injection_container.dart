@@ -4,15 +4,22 @@ import 'features/wine/data/repositories/wine_repository_impl.dart';
 import 'features/wine/domain/repositories/wine_repository.dart';
 import 'features/wine/domain/usecases/get_all_wines.dart';
 import 'features/wine/domain/usecases/get_last_wine.dart';
+import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // Bloc
+  // Blocs
   sl.registerFactory(
     () => WineBloc(
       getLastWine: sl(),
+      getAllWines: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => CellarBloc(
       getAllWines: sl(),
     ),
   );
