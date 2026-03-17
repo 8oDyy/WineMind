@@ -4,20 +4,29 @@ import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/wine/presentation/pages/home_page.dart';
-import 'injection_container.dart';
+import 'features/auth/presentation/pages/auth_choice_page.dart';
+import 'injection_container.dart' as di;
 
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WineMind',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: BlocProvider(
-        create: (_) => sl<WineBloc>(),
-        child: const MainScreen(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<WineBloc>(
+          create: (_) => di.sl<WineBloc>(),
+        ),
+        // TODO : ajouter AuthBloc ici quand il sera créé
+        // BlocProvider<AuthBloc>(
+        //   create: (_) => di.sl<AuthBloc>(),
+        // ),
+      ],
+      child: MaterialApp(
+        title: 'WineMind',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const AuthChoicePage(),
       ),
     );
   }
