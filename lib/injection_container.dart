@@ -5,6 +5,7 @@ import 'features/wine/domain/repositories/wine_repository.dart';
 import 'features/wine/domain/usecases/get_all_wines.dart';
 import 'features/wine/domain/usecases/get_last_wine.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
+import 'features/wine/presentation/bloc/cellar_bloc.dart';
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
