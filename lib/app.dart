@@ -1,25 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/wine/presentation/pages/home_page.dart';
-import 'injection_container.dart';
+import 'features/auth/presentation/pages/auth_choice_page.dart';
+import 'injection_container.dart' as di;
 
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WineMind',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: BlocProvider(
-        create: (_) => sl<WineBloc>(),
-        child: const MainScreen(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<WineBloc>(
+          create: (_) => di.sl<WineBloc>(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'WineMind',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const _SplashGate(),
       ),
     );
+  }
+}
+
+/// Vérifie si l'utilisateur est connecté au démarrage
+/// → connecté    : MainScreen
+/// → non connecté : AuthChoicePage
+class _SplashGate extends StatelessWidget {
+  const _SplashGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
+      return const MainScreen();
+    } else {
+      return const AuthChoicePage();
+    }
   }
 }
 
@@ -35,6 +59,9 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = const [
     HomePage(),
+    Scaffold(body: Center(child: Text('Vins — à venir'))),
+    Scaffold(body: Center(child: Text('Ma cave — à venir'))),
+    Scaffold(body: Center(child: Text('Plus — à venir'))),
   ];
 
   void _onScan() {
