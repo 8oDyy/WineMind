@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
@@ -17,18 +18,32 @@ class App extends StatelessWidget {
         BlocProvider<WineBloc>(
           create: (_) => di.sl<WineBloc>(),
         ),
-        // TODO : ajouter AuthBloc ici quand il sera créé
-        // BlocProvider<AuthBloc>(
-        //   create: (_) => di.sl<AuthBloc>(),
-        // ),
       ],
       child: MaterialApp(
         title: 'WineMind',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
-        home: const AuthChoicePage(),
+        home: const _SplashGate(),
       ),
     );
+  }
+}
+
+/// Vérifie si l'utilisateur est connecté au démarrage
+/// → connecté    : MainScreen
+/// → non connecté : AuthChoicePage
+class _SplashGate extends StatelessWidget {
+  const _SplashGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
+      return const MainScreen();
+    } else {
+      return const AuthChoicePage();
+    }
   }
 }
 

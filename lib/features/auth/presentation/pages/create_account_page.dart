@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
+ 
+import '../../../../injection_container.dart' as di;
+import '../../domain/usecases/register_user.dart';
 import 'knowledge_level_page.dart';
-
-// 💡 Déplace BubblePainter dans :
-//    lib/features/auth/presentation/widgets/bubble_painter.dart
-// puis importe-le ici et dans auth_choice_page.dart
-
+ 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
-
+ 
   @override
   State<CreateAccountPage> createState() => _CreateAccountPageState();
 }
-
+ 
 class _CreateAccountPageState extends State<CreateAccountPage> {
   final _formKey = GlobalKey<FormState>();
   final _prenomController = TextEditingController();
@@ -21,11 +20,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
+ 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
-
+ 
   @override
   void dispose() {
     _prenomController.dispose();
@@ -35,23 +34,50 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
+ 
   void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      // TODO : context.read<AuthBloc>().add(RegisterRequested(...))
-      await Future.delayed(const Duration(seconds: 2));
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      // ✅ Navigation directe vers la page suivante
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const KnowledgeLevelPage()),
+    if (!_formKey.currentState!.validate()) return;
+ 
+    setState(() => _isLoading = true);
+ 
+    try {
+      final result = await di.sl<RegisterUser>().call(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        prenom: _prenomController.text.trim(),
+        nom: _nomController.text.trim(),
       );
+ 
+      if (!mounted) return;
+ 
+      result.fold(
+        // ❌ Erreur
+        (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        },
+        // ✅ Succès — on navigue directement, le profil est déjà inséré par le use case
+        (_) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const KnowledgeLevelPage()),
+          );
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,10 +135,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // ── Formulaire email ──
+ 
+              // ── Formulaire ──
               Form(
                 key: _formKey,
                 child: Column(
@@ -162,8 +187,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           color: Colors.grey,
                           size: 20,
                         ),
-                        onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
+                        onPressed: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) return "Requis";
@@ -227,9 +252,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
-
+ 
               // ── Séparateur ──
               Row(
                 children: [
@@ -244,15 +268,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   const Expanded(child: Divider()),
                 ],
               ),
-
               const SizedBox(height: 16),
-
+ 
               // ── Bouton Google ──
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    // TODO : context.read<AuthBloc>().add(GoogleSignInRequested())
+                    // TODO : Google Sign In
                   },
                   icon: SvgPicture.network(
                     'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
@@ -271,7 +294,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
               Center(
                 child: Text(
@@ -286,7 +308,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       ),
     );
   }
-
+ 
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -328,23 +350,21 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     );
   }
 }
-
+ 
 // ─── BubblePainter ────────────────────────────────────────────────────────────
-// 💡 Recommandé : déplacer dans
-//    lib/features/auth/presentation/widgets/bubble_painter.dart
-
+ 
 class BubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Colors.grey[100]!
       ..style = PaintingStyle.fill;
-
+ 
     final path = Path();
     const double radius = 16;
     const double pointerWidth = 12;
     const double pointerHeight = 10;
-
+ 
     path.moveTo(radius + pointerWidth, 0);
     path.lineTo(size.width - radius, 0);
     path.quadraticBezierTo(size.width, 0, size.width, radius);
@@ -354,7 +374,7 @@ class BubblePainter extends CustomPainter {
     path.lineTo(radius + pointerWidth, size.height);
     path.quadraticBezierTo(
         pointerWidth, size.height, pointerWidth, size.height - radius);
-
+ 
     final double pointerY = size.height - pointerHeight * 2;
     path.lineTo(pointerWidth, pointerY + pointerHeight / 2);
     path.lineTo(0, pointerY);
@@ -362,11 +382,11 @@ class BubblePainter extends CustomPainter {
     path.lineTo(pointerWidth, radius);
     path.quadraticBezierTo(pointerWidth, 0, radius + pointerWidth, 0);
     path.close();
-
+ 
     canvas.drawShadow(path, Colors.grey.withOpacity(0.4), 3, true);
     canvas.drawPath(path, paint);
   }
-
+ 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

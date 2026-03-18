@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'create_account_page.dart';
+import 'login_page.dart';
 
 class AuthChoicePage extends StatelessWidget {
   const AuthChoicePage({super.key});
@@ -84,7 +85,6 @@ class AuthChoicePage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      // ✅ Navigation vers CreateAccountPage
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -109,7 +109,12 @@ class AuthChoicePage extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO : naviguer vers LoginPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoginPage(),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey[300],
@@ -136,10 +141,6 @@ class AuthChoicePage extends StatelessWidget {
     );
   }
 }
-
-// 💡 Recommandé : déplacer dans
-//    lib/features/auth/presentation/widgets/bubble_painter.dart
-//    et importer dans les deux pages
 
 class BubblePainter extends CustomPainter {
   @override
