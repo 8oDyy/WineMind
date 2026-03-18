@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 class Wine extends Equatable {
+  final String? id;
+  final String? cellarId;
   final String name;
   final String year;
   final String type;
@@ -11,6 +13,8 @@ class Wine extends Equatable {
   final int stock;
 
   const Wine({
+    this.id,
+    this.cellarId,
     required this.name,
     required this.year,
     required this.type,
@@ -22,5 +26,5 @@ class Wine extends Equatable {
   });
 
   @override
-  List<Object?> get props => [name, year, type, region, rating, points, apogee, stock];
+  List<Object?> get props => [id, cellarId, name, year, type, region, rating, points, apogee, stock];
 }
