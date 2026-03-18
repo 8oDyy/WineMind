@@ -27,7 +27,9 @@ abstract class AuthRemoteDataSource {
 }
  
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final SupabaseClient _client = Supabase.instance.client;
+  final SupabaseClient _client;
+
+  AuthRemoteDataSourceImpl(this._client);
  
   @override
   Future<UserModel> register({

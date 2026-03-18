@@ -4,7 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
+import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/pages/home_page.dart';
+import 'features/wine/presentation/pages/cellar_page.dart';
+import 'features/wine/presentation/pages/wines_page.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'injection_container.dart' as di;
 
@@ -17,6 +20,9 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider<WineBloc>(
           create: (_) => di.sl<WineBloc>(),
+        ),
+        BlocProvider<CellarBloc>(
+          create: (_) => di.sl<CellarBloc>(),
         ),
       ],
       child: MaterialApp(
@@ -59,8 +65,8 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = const [
     HomePage(),
-    Scaffold(body: Center(child: Text('Vins — à venir'))),
-    Scaffold(body: Center(child: Text('Ma cave — à venir'))),
+    WinesPage(),
+    CellarPage(),
     Scaffold(body: Center(child: Text('Plus — à venir'))),
   ];
 

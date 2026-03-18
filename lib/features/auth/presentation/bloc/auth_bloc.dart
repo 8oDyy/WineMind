@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../../domain/usecases/get_current_user.dart';
 import '../../domain/usecases/login_user.dart';
 import '../../domain/usecases/logout_user.dart';
 import '../../domain/usecases/register_user.dart';
@@ -12,13 +12,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUser loginUser;
   final RegisterUser registerUser;
   final LogoutUser logoutUser;
-  final AuthRepository authRepository;
+  final GetCurrentUser getCurrentUser;
 
   AuthBloc({
     required this.loginUser,
     required this.registerUser,
     required this.logoutUser,
-    required this.authRepository,
+    required this.getCurrentUser,
   }) : super(const AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<LoginWithEmailPasswordEvent>(_onLoginWithEmailPassword);
@@ -30,7 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     CheckAuthStatusEvent event,
     Emitter<AuthState> emit,
   ) async {
-    final user = authRepository.getCurrentUser();
+    final user = getCurrentUser();
     if (user != null) {
       emit(AuthAuthenticated(user: user));
     } else {
