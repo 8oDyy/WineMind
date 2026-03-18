@@ -18,14 +18,18 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
   late AnimationController _confettiController;
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
+  late List<_ConfettiParticle> _particles;
 
   @override
   void initState() {
     super.initState();
+
+    _particles = _ConfettiParticle.generate(200);
+
     _confettiController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
+      duration: const Duration(milliseconds: 3000),
+    )..forward();
 
     _scaleController = AnimationController(
       vsync: this,
@@ -123,7 +127,10 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                     child: AnimatedBuilder(
                       animation: _confettiController,
                       builder: (_, _) => CustomPaint(
-                        painter: _ConfettiPainter(_confettiController.value),
+                        painter: _ConfettiPainter(
+                          progress: _confettiController.value,
+                          particles: _particles,
+                        ),
                       ),
                     ),
                   ),
@@ -277,47 +284,146 @@ class _CirclesBgPainter extends CustomPainter {
 }
 
 // ─── Confettis ────────────────────────────────────────────────────────────────
-class _ConfettiPainter extends CustomPainter {
-  final double progress;
-  static final _rng = math.Random(42);
-  static final List<_ConfettiParticle> _particles =
-      List.generate(30, (i) {
-    return _ConfettiParticle(
-      x: _rng.nextDouble(),
-      startY: -0.1 - _rng.nextDouble() * 0.5,
-      speed: 0.3 + _rng.nextDouble() * 0.4,
-      size: 4 + _rng.nextDouble() * 6,
-      color: i % 5 == 0
-          ? AppColors.primaryWine
-          : i % 5 == 1
-              ? const Color(0xFFE8C4A0)
-              : i % 5 == 2
-                  ? const Color(0xFFF5E6D3)
-                  : i % 5 == 3
-                      ? const Color(0xFFD4A0A0)
-                      : Colors.white,
-      angle: _rng.nextDouble() * math.pi * 2,
-      spin: (_rng.nextDouble() - 0.5) * 0.2,
-    );
+
+enum _ConfettiShape { rect, ribbon, circle, triangle }
+
+class _ConfettiParticle {
+  final double vx;      // vélocité horizontale (pixels/sec normalisé)
+  final double vy;      // vélocité verticale initiale (négatif = vers le haut)
+  final double spin;    // vitesse de rotation
+  final double wobbleAmp;
+  final double wobbleFreq;
+  final double size;
+  final Color color;
+  final _ConfettiShape shape;
+  final double delay;   // 0..0.15s de décalage pour un effet staggered
+
+  const _ConfettiParticle({
+    required this.vx,
+    required this.vy,
+    required this.spin,
+    required this.wobbleAmp,
+    required this.wobbleFreq,
+    required this.size,
+    required this.color,
+    required this.shape,
+    required this.delay,
   });
 
-  const _ConfettiPainter(this.progress);
+  static const List<Color> _palette = [
+    AppColors.primaryWine,
+    Color(0xFFFF1744),
+    Color(0xFFFFD600),
+    Color(0xFFFF6D00),
+    Color(0xFF00E676),
+    Color(0xFF2979FF),
+    Color(0xFFE040FB),
+    Color(0xFF00E5FF),
+    Color(0xFFFF4081),
+    Color(0xFFFFFF00),
+    Color(0xFF76FF03),
+    Color(0xFFFF3D00),
+  ];
+
+  static List<_ConfettiParticle> generate(int count) {
+    final rng = math.Random();
+    final shapes = _ConfettiShape.values;
+    return List.generate(count, (i) {
+      // Éventail horizontal large, poussée verticale forte vers le HAUT
+      final spreadX = (rng.nextDouble() - 0.5) * 2.0; // -1..1
+      final upForce = -0.6 - rng.nextDouble() * 0.9;   // -0.6..-1.5 (vers le haut)
+      return _ConfettiParticle(
+        vx: spreadX * 600,
+        vy: upForce * 900,
+        spin: (rng.nextDouble() - 0.5) * 15,
+        wobbleAmp: 10 + rng.nextDouble() * 30,
+        wobbleFreq: 2 + rng.nextDouble() * 5,
+        size: 6 + rng.nextDouble() * 10,
+        color: _palette[i % _palette.length],
+        shape: shapes[i % shapes.length],
+        delay: rng.nextDouble() * 0.12,
+      );
+    });
+  }
+}
+
+class _ConfettiPainter extends CustomPainter {
+  final double progress;
+  final List<_ConfettiParticle> particles;
+
+  const _ConfettiPainter({
+    required this.progress,
+    required this.particles,
+  });
+
+  // Gravité en pixels/sec² (normalisé par la durée de l'animation)
+  static const double _gravity = 2400;
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final p in _particles) {
-      final y = (p.startY + progress * p.speed) % 1.2;
-      final x = p.x + math.sin(progress * math.pi * 2 + p.angle) * 0.03;
-      final angle = p.angle + progress * p.spin * math.pi * 2;
-      final paint = Paint()..color = p.color;
+    // Point de départ : centre horizontal, milieu vertical
+    final cx = size.width * 0.5;
+    final cy = size.height * 0.5;
+
+    // Durée totale animation = 3 secondes
+    const totalDuration = 3.0;
+
+    for (final p in particles) {
+      // Temps local de cette particule en secondes
+      final tSec = (progress * totalDuration - p.delay * totalDuration)
+          .clamp(0.0, totalDuration);
+      if (tSec <= 0) continue;
+
+      // Position physique : v*t + 0.5*g*t²
+      final px = cx + p.vx * tSec + math.sin(tSec * p.wobbleFreq) * p.wobbleAmp;
+      final py = cy + p.vy * tSec + 0.5 * _gravity * tSec * tSec;
+
+      // Hors écran → skip
+      if (px < -30 || px > size.width + 30 || py > size.height + 50 || py < -100) continue;
+
+      // Fade out dans le dernier quart
+      final double alpha;
+      if (progress > 0.75) {
+        alpha = (1.0 - (progress - 0.75) / 0.25).clamp(0.0, 1.0);
+      } else {
+        alpha = 1.0;
+      }
+      if (alpha <= 0) continue;
+
+      final rot = tSec * p.spin;
+      final paint = Paint()
+        ..color = p.color.withAlpha((alpha * 255).round().clamp(0, 255));
+
       canvas.save();
-      canvas.translate(x * size.width, y * size.height);
-      canvas.rotate(angle);
-      canvas.drawRect(
-        Rect.fromCenter(
-            center: Offset.zero, width: p.size, height: p.size * 0.5),
-        paint,
-      );
+      canvas.translate(px, py);
+      canvas.rotate(rot);
+
+      switch (p.shape) {
+        case _ConfettiShape.rect:
+          canvas.drawRect(
+            Rect.fromCenter(
+                center: Offset.zero, width: p.size, height: p.size * 0.45),
+            paint,
+          );
+        case _ConfettiShape.ribbon:
+          canvas.drawRect(
+            Rect.fromCenter(
+                center: Offset.zero,
+                width: p.size * 2.0,
+                height: p.size * 0.3),
+            paint,
+          );
+        case _ConfettiShape.circle:
+          canvas.drawCircle(Offset.zero, p.size * 0.4, paint);
+        case _ConfettiShape.triangle:
+          final path = Path()
+            ..moveTo(0, -p.size * 0.55)
+            ..lineTo(p.size * 0.5, p.size * 0.4)
+            ..lineTo(-p.size * 0.5, p.size * 0.4)
+            ..close();
+          canvas.drawPath(path, paint);
+      }
+
       canvas.restore();
     }
   }
@@ -325,23 +431,4 @@ class _ConfettiPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ConfettiPainter oldDelegate) =>
       oldDelegate.progress != progress;
-}
-
-class _ConfettiParticle {
-  final double x;
-  final double startY;
-  final double speed;
-  final double size;
-  final Color color;
-  final double angle;
-  final double spin;
-  const _ConfettiParticle({
-    required this.x,
-    required this.startY,
-    required this.speed,
-    required this.size,
-    required this.color,
-    required this.angle,
-    required this.spin,
-  });
 }
