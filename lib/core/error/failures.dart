@@ -13,3 +13,12 @@ class CacheFailure extends Failure {
   @override
   List<Object?> get props => [];
 }
+
+class AuthFailure extends Failure {
+  final String message;
+
+  const AuthFailure(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

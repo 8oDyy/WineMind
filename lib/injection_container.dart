@@ -12,15 +12,30 @@ import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/login_user.dart';
+import 'features/auth/domain/usecases/logout_user.dart';
 import 'features/auth/domain/usecases/register_user.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
   // ─── Auth ────────────────────────────────────────────────────────────────
 
+  // Bloc
+  sl.registerFactory(
+    () => AuthBloc(
+      loginUser: sl(),
+      registerUser: sl(),
+      logoutUser: sl(),
+      authRepository: sl(),
+    ),
+  );
+
   // Use cases
+  sl.registerLazySingleton(() => LoginUser(sl()));
   sl.registerLazySingleton(() => RegisterUser(sl()));
+  sl.registerLazySingleton(() => LogoutUser(sl()));
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(

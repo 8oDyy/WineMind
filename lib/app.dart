@@ -59,6 +59,9 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = const [
     HomePage(),
+    Scaffold(body: Center(child: Text('Vins — à venir'))),
+    Scaffold(body: Center(child: Text('Ma cave — à venir'))),
+    Scaffold(body: Center(child: Text('Plus — à venir'))),
   ];
 
   void _onScan() {

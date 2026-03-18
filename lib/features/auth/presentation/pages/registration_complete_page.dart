@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../app.dart';
 // import '../widgets/bubble_painter.dart';
 
@@ -81,7 +82,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF8B0D1A),
+                            color: AppColors.primaryWine,
                             letterSpacing: 1,
                           ),
                         ),
@@ -92,7 +93,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF8B0D1A),
+                              color: AppColors.primaryWine,
                               width: 1.5,
                             ),
                           ),
@@ -121,7 +122,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                   Positioned.fill(
                     child: AnimatedBuilder(
                       animation: _confettiController,
-                      builder: (_, __) => CustomPaint(
+                      builder: (_, _) => CustomPaint(
                         painter: _ConfettiPainter(_confettiController.value),
                       ),
                     ),
@@ -133,7 +134,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                       height: 80,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF8B0D1A),
+                        color: AppColors.primaryWine,
                       ),
                       child: const Icon(
                         Icons.celebration_outlined,
@@ -174,7 +175,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                       Row(
                         children: [
                           const Icon(Icons.check_circle,
-                              color: Color(0xFF8B0D1A), size: 16),
+                              color: AppColors.primaryWine, size: 16),
                           const SizedBox(width: 6),
                           Text(
                             "PROFIL CONFIGURÉ",
@@ -192,7 +193,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF8B0D1A),
+                          color: AppColors.primaryWine,
                         ),
                       ),
                     ],
@@ -205,7 +206,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                       minHeight: 6,
                       backgroundColor: Colors.grey[200],
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF8B0D1A)),
+                          AppColors.primaryWine),
                     ),
                   ),
 
@@ -226,7 +227,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B0D1A),
+                        backgroundColor: AppColors.primaryWine,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -287,7 +288,7 @@ class _ConfettiPainter extends CustomPainter {
       speed: 0.3 + _rng.nextDouble() * 0.4,
       size: 4 + _rng.nextDouble() * 6,
       color: i % 5 == 0
-          ? const Color(0xFF8B0D1A)
+          ? AppColors.primaryWine
           : i % 5 == 1
               ? const Color(0xFFE8C4A0)
               : i % 5 == 2

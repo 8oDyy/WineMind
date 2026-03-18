@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
@@ -10,7 +11,7 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<String, UserEntity>> register({
+  Future<Either<Failure, UserEntity>> register({
     required String email,
     required String password,
     required String prenom,
@@ -25,14 +26,14 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Right(user);
     } on AuthException catch (e) {
-      return Left(e.message);
+      return Left(AuthFailure(e.message));
     } catch (e) {
-      return Left(e.toString());
+      return Left(AuthFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<String, UserEntity>> login({
+  Future<Either<Failure, UserEntity>> login({
     required String email,
     required String password,
   }) async {
@@ -43,24 +44,24 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Right(user);
     } on AuthException catch (e) {
-      return Left(e.message);
+      return Left(AuthFailure(e.message));
     } catch (e) {
-      return Left(e.toString());
+      return Left(AuthFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<String, void>> logout() async {
+  Future<Either<Failure, void>> logout() async {
     try {
       await remoteDataSource.logout();
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(AuthFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<String, void>> updateProfile({
+  Future<Either<Failure, void>> updateProfile({
     required String userId,
     String? niveau,
     String? preference,
@@ -75,7 +76,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(AuthFailure(e.toString()));
     }
   }
 

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/bubble_painter.dart';
+import '../../../../injection_container.dart' as di;
+import '../../../../app.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import '../../data/datasources/auth_remote_data_source.dart';
-import '../../data/repositories/auth_repository_impl.dart';
-import '../../../../app.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -14,11 +15,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AuthBloc(
-        authRepository: AuthRepositoryImpl(
-          remoteDataSource: AuthRemoteDataSourceImpl(),
-        ),
-      ),
+      create: (_) => di.sl<AuthBloc>(),
       child: const _LoginView(),
     );
   }
@@ -36,7 +33,6 @@ class _LoginViewState extends State<_LoginView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -45,10 +41,8 @@ class _LoginViewState extends State<_LoginView> {
     super.dispose();
   }
 
-  void _submit() async {
+  void _submit() {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
 
     context.read<AuthBloc>().add(
           LoginWithEmailPasswordEvent(
@@ -72,10 +66,9 @@ class _LoginViewState extends State<_LoginView> {
         ),
         centerTitle: true,
       ),
-      body: BlocListener<AuthBloc, AuthState>(
+      body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            setState(() => _isLoading = false);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -95,7 +88,9 @@ class _LoginViewState extends State<_LoginView> {
               );
           }
         },
-        child: SafeArea(
+        builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Column(
@@ -116,7 +111,7 @@ class _LoginViewState extends State<_LoginView> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF8B0D1A),
+                              color: AppColors.primaryWine,
                               letterSpacing: 1,
                             ),
                           ),
@@ -187,7 +182,7 @@ class _LoginViewState extends State<_LoginView> {
                             // TODO : mot de passe oublié
                           },
                           style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF8B0D1A),
+                            foregroundColor: AppColors.primaryWine,
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -204,8 +199,8 @@ class _LoginViewState extends State<_LoginView> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : _submit,
-                          icon: _isLoading
+                          onPressed: isLoading ? null : _submit,
+                          icon: isLoading
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
@@ -216,12 +211,12 @@ class _LoginViewState extends State<_LoginView> {
                                 )
                               : const Icon(Icons.login, size: 18),
                           label: Text(
-                            _isLoading
+                            isLoading
                                 ? "Connexion en cours..."
                                 : "Se connecter avec un email",
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B0D1A),
+                            backgroundColor: AppColors.primaryWine,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -287,7 +282,8 @@ class _LoginViewState extends State<_LoginView> {
               ],
             ),
           ),
-        ),
+        );
+        },
       ),
     );
   }
@@ -322,7 +318,7 @@ class _LoginViewState extends State<_LoginView> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
-              const BorderSide(color: Color(0xFF8B0D1A), width: 1.5),
+              const BorderSide(color: AppColors.primaryWine, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -333,44 +329,4 @@ class _LoginViewState extends State<_LoginView> {
       ),
     );
   }
-}
-
-// ─── BubblePainter ────────────────────────────────────────────────────────────
-
-class BubblePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey[100]!
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    const double radius = 16;
-    const double pointerWidth = 12;
-    const double pointerHeight = 10;
-
-    path.moveTo(radius + pointerWidth, 0);
-    path.lineTo(size.width - radius, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, radius);
-    path.lineTo(size.width, size.height - radius);
-    path.quadraticBezierTo(
-        size.width, size.height, size.width - radius, size.height);
-    path.lineTo(radius + pointerWidth, size.height);
-    path.quadraticBezierTo(
-        pointerWidth, size.height, pointerWidth, size.height - radius);
-
-    final double pointerY = size.height - pointerHeight * 2;
-    path.lineTo(pointerWidth, pointerY + pointerHeight / 2);
-    path.lineTo(0, pointerY);
-    path.lineTo(pointerWidth, pointerY - pointerHeight / 2);
-    path.lineTo(pointerWidth, radius);
-    path.quadraticBezierTo(pointerWidth, 0, radius + pointerWidth, 0);
-    path.close();
-
-    canvas.drawShadow(path, Colors.grey.withOpacity(0.4), 3, true);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

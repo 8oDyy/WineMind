@@ -1,30 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
- 
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/bubble_painter.dart';
 import '../../../../injection_container.dart' as di;
-import '../../domain/usecases/register_user.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 import 'knowledge_level_page.dart';
- 
-class CreateAccountPage extends StatefulWidget {
+
+class CreateAccountPage extends StatelessWidget {
   const CreateAccountPage({super.key});
- 
+
   @override
-  State<CreateAccountPage> createState() => _CreateAccountPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => di.sl<AuthBloc>(),
+      child: const _CreateAccountView(),
+    );
+  }
+}
+
+class _CreateAccountView extends StatefulWidget {
+  const _CreateAccountView();
+
+  @override
+  State<_CreateAccountView> createState() => _CreateAccountViewState();
 }
  
-class _CreateAccountPageState extends State<CreateAccountPage> {
+class _CreateAccountViewState extends State<_CreateAccountView> {
   final _formKey = GlobalKey<FormState>();
   final _prenomController = TextEditingController();
   final _nomController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
- 
+
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  bool _isLoading = false;
- 
+
   @override
   void dispose() {
     _prenomController.dispose();
@@ -34,48 +49,18 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
- 
-  void _submit() async {
+
+  void _submit() {
     if (!_formKey.currentState!.validate()) return;
- 
-    setState(() => _isLoading = true);
- 
-    try {
-      final result = await di.sl<RegisterUser>().call(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        prenom: _prenomController.text.trim(),
-        nom: _nomController.text.trim(),
-      );
- 
-      if (!mounted) return;
- 
-      result.fold(
-        // ❌ Erreur
-        (error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error),
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-        },
-        // ✅ Succès — on navigue directement, le profil est déjà inséré par le use case
-        (_) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const KnowledgeLevelPage()),
-          );
-        },
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+
+    context.read<AuthBloc>().add(
+          RegisterWithEmailPasswordEvent(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            prenom: _prenomController.text.trim(),
+            nom: _nomController.text.trim(),
+          ),
+        );
   }
  
   @override
@@ -92,7 +77,30 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         ),
         centerTitle: true,
       ),
-      body: SafeArea(
+      body: BlocConsumer<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
+              ),
+            );
+          } else if (state is AuthAuthenticated) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const KnowledgeLevelPage()),
+            );
+          }
+        },
+        builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
@@ -113,7 +121,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF8B0D1A),
+                            color: AppColors.primaryWine,
                             letterSpacing: 1,
                           ),
                         ),
@@ -223,8 +231,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _submit,
-                        icon: _isLoading
+                        onPressed: isLoading ? null : _submit,
+                        icon: isLoading
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
@@ -235,12 +243,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               )
                             : const Icon(Icons.email_outlined, size: 18),
                         label: Text(
-                          _isLoading
+                          isLoading
                               ? "Création en cours..."
                               : "Créer un compte avec un email",
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B0D1A),
+                          backgroundColor: AppColors.primaryWine,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -305,6 +313,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             ],
           ),
         ),
+        );
+        },
       ),
     );
   }
@@ -338,7 +348,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF8B0D1A), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primaryWine, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -351,42 +361,3 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 }
  
-// ─── BubblePainter ────────────────────────────────────────────────────────────
- 
-class BubblePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey[100]!
-      ..style = PaintingStyle.fill;
- 
-    final path = Path();
-    const double radius = 16;
-    const double pointerWidth = 12;
-    const double pointerHeight = 10;
- 
-    path.moveTo(radius + pointerWidth, 0);
-    path.lineTo(size.width - radius, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, radius);
-    path.lineTo(size.width, size.height - radius);
-    path.quadraticBezierTo(
-        size.width, size.height, size.width - radius, size.height);
-    path.lineTo(radius + pointerWidth, size.height);
-    path.quadraticBezierTo(
-        pointerWidth, size.height, pointerWidth, size.height - radius);
- 
-    final double pointerY = size.height - pointerHeight * 2;
-    path.lineTo(pointerWidth, pointerY + pointerHeight / 2);
-    path.lineTo(0, pointerY);
-    path.lineTo(pointerWidth, pointerY - pointerHeight / 2);
-    path.lineTo(pointerWidth, radius);
-    path.quadraticBezierTo(pointerWidth, 0, radius + pointerWidth, 0);
-    path.close();
- 
-    canvas.drawShadow(path, Colors.grey.withOpacity(0.4), 3, true);
-    canvas.drawPath(path, paint);
-  }
- 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

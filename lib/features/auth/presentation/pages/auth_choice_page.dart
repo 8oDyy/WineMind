@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/bubble_painter.dart';
 import 'create_account_page.dart';
 import 'login_page.dart';
 
@@ -94,7 +96,7 @@ class AuthChoicePage extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B0D1A),
+                        backgroundColor: AppColors.primaryWine,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -140,42 +142,4 @@ class AuthChoicePage extends StatelessWidget {
       ),
     );
   }
-}
-
-class BubblePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey[100]!
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    const double radius = 16;
-    const double pointerWidth = 12;
-    const double pointerHeight = 10;
-
-    path.moveTo(radius + pointerWidth, 0);
-    path.lineTo(size.width - radius, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, radius);
-    path.lineTo(size.width, size.height - radius);
-    path.quadraticBezierTo(
-        size.width, size.height, size.width - radius, size.height);
-    path.lineTo(radius + pointerWidth, size.height);
-    path.quadraticBezierTo(
-        pointerWidth, size.height, pointerWidth, size.height - radius);
-
-    final double pointerY = size.height - pointerHeight * 2;
-    path.lineTo(pointerWidth, pointerY + pointerHeight / 2);
-    path.lineTo(0, pointerY);
-    path.lineTo(pointerWidth, pointerY - pointerHeight / 2);
-    path.lineTo(pointerWidth, radius);
-    path.quadraticBezierTo(pointerWidth, 0, radius + pointerWidth, 0);
-    path.close();
-
-    canvas.drawShadow(path, Colors.grey.withOpacity(0.4), 3, true);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -14,6 +14,3 @@ void main() async {
   await di.init();
   runApp(const App());
 }
-
-// Helper global pour accéder au client Supabase partout
-final supabase = Supabase.instance.client;

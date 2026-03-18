@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/bubble_painter.dart';
 import 'objective_page.dart';
-// import '../widgets/bubble_painter.dart';
 
 class WinePreferencePage extends StatefulWidget {
   const WinePreferencePage({super.key});
@@ -80,7 +81,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF8B0D1A),
+                                  color: AppColors.primaryWine,
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -122,7 +123,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                                   : Colors.white,
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF8B0D1A)
+                                    ? AppColors.primaryWine
                                     : Colors.grey[300]!,
                                 width: isSelected ? 1.5 : 1,
                               ),
@@ -134,7 +135,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                                   option.icon,
                                   size: 22,
                                   color: isSelected
-                                      ? const Color(0xFF8B0D1A)
+                                      ? AppColors.primaryWine
                                       : Colors.grey[400],
                                 ),
                                 const SizedBox(width: 14),
@@ -145,7 +146,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
                                       color: isSelected
-                                          ? const Color(0xFF8B0D1A)
+                                          ? AppColors.primaryWine
                                           : Colors.black87,
                                     ),
                                   ),
@@ -158,11 +159,11 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: isSelected
-                                        ? const Color(0xFF8B0D1A)
+                                        ? AppColors.primaryWine
                                         : Colors.transparent,
                                     border: Border.all(
                                       color: isSelected
-                                          ? const Color(0xFF8B0D1A)
+                                          ? AppColors.primaryWine
                                           : Colors.grey[300]!,
                                       width: 2,
                                     ),
@@ -211,7 +212,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF8B0D1A),
+                          color: AppColors.primaryWine,
                         ),
                       ),
                     ],
@@ -224,7 +225,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                       minHeight: 6,
                       backgroundColor: Colors.grey[200],
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF8B0D1A),
+                        AppColors.primaryWine,
                       ),
                     ),
                   ),
@@ -241,7 +242,7 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B0D1A),
+                        backgroundColor: AppColors.primaryWine,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -276,43 +277,4 @@ class _WineOption {
   final String title;
   final IconData icon;
   const _WineOption({required this.title, required this.icon});
-}
-
-// ─── BubblePainter ────────────────────────────────────────────────────────────
-class BubblePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey[100]!
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    const double radius = 16;
-    const double pointerWidth = 12;
-    const double pointerHeight = 10;
-
-    path.moveTo(radius + pointerWidth, 0);
-    path.lineTo(size.width - radius, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, radius);
-    path.lineTo(size.width, size.height - radius);
-    path.quadraticBezierTo(
-        size.width, size.height, size.width - radius, size.height);
-    path.lineTo(radius + pointerWidth, size.height);
-    path.quadraticBezierTo(
-        pointerWidth, size.height, pointerWidth, size.height - radius);
-
-    final double pointerY = size.height - pointerHeight * 2;
-    path.lineTo(pointerWidth, pointerY + pointerHeight / 2);
-    path.lineTo(0, pointerY);
-    path.lineTo(pointerWidth, pointerY - pointerHeight / 2);
-    path.lineTo(pointerWidth, radius);
-    path.quadraticBezierTo(pointerWidth, 0, radius + pointerWidth, 0);
-    path.close();
-
-    canvas.drawShadow(path, Colors.grey.withOpacity(0.4), 3, true);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

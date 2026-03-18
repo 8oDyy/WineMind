@@ -6,8 +6,19 @@ import '../bloc/wine_event.dart';
 import '../bloc/wine_state.dart';
 import '../widgets/wine_last_card.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<WineBloc>().add(const GetLastWineEvent());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +43,7 @@ class HomePage extends StatelessWidget {
               ),
               BlocBuilder<WineBloc, WineState>(
                 builder: (context, state) {
-                  if (state is WineInitial) {
-                    context.read<WineBloc>().add(const GetLastWineEvent());
-                    return const SizedBox.shrink();
-                  } else if (state is WineLoading) {
+                  if (state is WineLoading) {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.all(40),
