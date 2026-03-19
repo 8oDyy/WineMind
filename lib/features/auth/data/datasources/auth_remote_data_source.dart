@@ -23,6 +23,8 @@ abstract class AuthRemoteDataSource {
     String? objectif,
   });
  
+  Future<void> deleteAccount({required String userId});
+
   UserModel? getCurrentUser();
 }
  
@@ -114,6 +116,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     await _client.from('profiles').update(updates).eq('id', userId);
   }
  
+  @override
+  Future<void> deleteAccount({required String userId}) async {
+    await _client.from('profiles').delete().eq('id', userId);
+    await _client.auth.signOut();
+  }
+
   @override
   UserModel? getCurrentUser() {
     final user = _client.auth.currentUser;

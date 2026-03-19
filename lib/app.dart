@@ -10,6 +10,7 @@ import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
+import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/wine/presentation/pages/cellar_page.dart';
 import 'features/wine/presentation/pages/home_page.dart';
 import 'features/wine/presentation/pages/wines_page.dart';
@@ -60,7 +61,7 @@ class _SplashGateState extends State<SplashGate> {
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        if (state is AuthAuthenticated) return const MainScreen();
+        if (state is AuthAuthenticated) return MainScreen(user: state.user);
         if (state is AuthUnauthenticated) return const AuthChoicePage();
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
@@ -84,7 +85,7 @@ class _MainScreenState extends State<MainScreen> {
     HomePage(),
     WinesPage(),
     CellarPage(),
-    SizedBox.shrink(),
+    SettingsPage(),
   ];
 
   void _onScan() {
