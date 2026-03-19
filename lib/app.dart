@@ -11,6 +11,7 @@ import 'features/ai/presentation/bloc/chat_bloc.dart';
 import 'features/ai/presentation/bloc/chat_event.dart';
 import 'features/dishpicture/presentation/bloc/dish_picture_bloc.dart';
 import 'features/dishpicture/presentation/bloc/dish_analysis_bloc.dart';
+import 'features/wine_label/presentation/bloc/wine_label_bloc.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
@@ -33,6 +34,7 @@ class App extends StatelessWidget {
         BlocProvider(create: (_) => sl<ChatBloc>()),
         BlocProvider(create: (_) => sl<DishPictureBloc>()),
         BlocProvider(create: (_) => sl<DishAnalysisBloc>()),
+        BlocProvider(create: (_) => sl<WineLabelBloc>()),
       ],
       child: MaterialApp(
         title: 'WineMind',

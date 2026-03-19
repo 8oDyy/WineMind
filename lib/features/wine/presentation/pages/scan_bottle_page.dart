@@ -1,388 +1,229 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../wine_label/presentation/bloc/wine_label_bloc.dart';
+import '../../../wine_label/presentation/bloc/wine_label_event.dart';
+import '../../../wine_label/presentation/bloc/wine_label_state.dart';
+import '../../../wine_label/presentation/pages/wine_selection_page.dart';
+import '../../../wine_label/presentation/pages/wine_analyzing_page.dart';
 
-class ScanBottlePage extends StatefulWidget {
+class ScanBottlePage extends StatelessWidget {
   const ScanBottlePage({super.key});
 
-  @override
-  State<ScanBottlePage> createState() => _ScanBottlePageState();
-}
-
-class _ScanBottlePageState extends State<ScanBottlePage>
-    with WidgetsBindingObserver {
-  CameraController? _controller;
-  List<CameraDescription> _cameras = [];
-  int _currentCameraIndex = 0;
-  bool _isInitializing = true;
-  bool _isSettingUp = false;
-  String? _errorMessage;
-  final ImagePicker _picker = ImagePicker();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _initCamera();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_controller == null || !_controller!.value.isInitialized) return;
-
-    if (state == AppLifecycleState.inactive) {
-      _controller?.dispose();
-      _controller = null;
-    } else if (state == AppLifecycleState.resumed) {
-      _initCamera();
-    }
-  }
-
-  Future<void> _initCamera() async {
-    setState(() {
-      _isInitializing = true;
-      _errorMessage = null;
-    });
-
+  Future<void> _takePicture(BuildContext context) async {
     try {
-      _cameras = await availableCameras();
-      if (!mounted) return;
-      if (_cameras.isEmpty) {
-        setState(() {
-          _isInitializing = false;
-          _errorMessage = 'Aucune caméra disponible';
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      
+      if (image != null && context.mounted) {
+        final bytes = await image.readAsBytes();
+        
+        // Navigate to analyzing page first
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const WineAnalyzingPage(),
+          ),
+        ).then((_) {
+          // After navigating, trigger the upload
+          if (context.mounted) {
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthAuthenticated) {
+              context.read<WineLabelBloc>().add(
+                UploadLabelPictureEvent(
+                  userId: authState.user.id,
+                  fileName: image.name,
+                  fileBytes: bytes,
+                ),
+              );
+            }
+          }
         });
-        return;
       }
-
-      await _setupCamera(_cameras[_currentCameraIndex]);
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isInitializing = false;
-        _errorMessage = 'Erreur d\'initialisation de la caméra';
-      });
-    }
-  }
-
-  Future<void> _setupCamera(CameraDescription camera) async {
-    if (_isSettingUp) return;
-    _isSettingUp = true;
-
-    _controller?.dispose();
-    _controller = null;
-
-    final controller = CameraController(
-      camera,
-      ResolutionPreset.high,
-      enableAudio: false,
-    );
-
-    try {
-      await controller.initialize();
-      if (!mounted) {
-        controller.dispose();
-        return;
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-      _controller = controller;
-      setState(() => _isInitializing = false);
-    } catch (e) {
-      controller.dispose();
-      if (!mounted) return;
-      setState(() {
-        _isInitializing = false;
-        _errorMessage = 'Impossible d\'accéder à la caméra';
-      });
-    } finally {
-      _isSettingUp = false;
     }
   }
 
-  Future<void> _switchCamera() async {
-    if (_cameras.length < 2) return;
-    _currentCameraIndex = (_currentCameraIndex + 1) % _cameras.length;
-    await _setupCamera(_cameras[_currentCameraIndex]);
-  }
-
-  Future<void> _takePicture() async {
-    if (_controller == null || !_controller!.value.isInitialized) return;
-    if (_controller!.value.isTakingPicture) return;
-
+  Future<void> _pickFromGallery(BuildContext context) async {
     try {
-      final image = await _controller!.takePicture();
-      if (!mounted) return;
-      // TODO: traiter l'image capturée (reconnaissance étiquette)
-      Navigator.of(context).pop(image.path);
-    } catch (_) {
-      // Silently ignore capture errors
-    }
-  }
-
-  Future<void> _pickFromGallery() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null && mounted) {
-      // TODO: traiter l'image sélectionnée (reconnaissance étiquette)
-      Navigator.of(context).pop(image.path);
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (image != null && context.mounted) {
+        final bytes = await image.readAsBytes();
+        
+        // Navigate to analyzing page first
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const WineAnalyzingPage(),
+          ),
+        ).then((_) {
+          // After navigating, trigger the upload
+          if (context.mounted) {
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthAuthenticated) {
+              context.read<WineLabelBloc>().add(
+                UploadLabelPictureEvent(
+                  userId: authState.user.id,
+                  fileName: image.name,
+                  fileBytes: bytes,
+                ),
+              );
+            }
+          }
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          _buildCameraPreview(),
-          _buildOverlay(),
-          _buildTopBar(context),
-          _buildBottomBar(),
-        ],
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Scanner une étiquette'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
       ),
-    );
-  }
-
-  Widget _buildCameraPreview() {
-    if (_isInitializing) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.camera_alt, color: Colors.white38, size: 64),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return const SizedBox.shrink();
-    }
-
-    return SizedBox.expand(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: _controller!.value.previewSize!.height,
-          height: _controller!.value.previewSize!.width,
-          child: CameraPreview(_controller!),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOverlay() {
-    return IgnorePointer(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final scanAreaWidth = constraints.maxWidth * 0.75;
-          final scanAreaHeight = constraints.maxHeight * 0.45;
-          final left = (constraints.maxWidth - scanAreaWidth) / 2;
-          final top = (constraints.maxHeight - scanAreaHeight) / 2 - 40;
-
-          return Stack(
-            children: [
-              // Semi-transparent dark overlay
-              ColorFiltered(
-                colorFilter: const ColorFilter.mode(
-                  Colors.black54,
-                  BlendMode.srcOut,
-                ),
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        backgroundBlendMode: BlendMode.dstOut,
-                      ),
-                    ),
-                    Positioned(
-                      left: left,
-                      top: top,
-                      child: Container(
-                        width: scanAreaWidth,
-                        height: scanAreaHeight,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Red border around scan area
-              Positioned(
-                left: left,
-                top: top,
-                child: Container(
-                  width: scanAreaWidth,
-                  height: scanAreaHeight,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.primaryWine,
-                      width: 2.5,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+      body: BlocListener<WineLabelBloc, WineLabelState>(
+        listener: (context, state) {
+          if (!context.mounted) return;
+          
+          if (state is LabelUploadSuccess) {
+            // Trigger analysis after successful upload
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthAuthenticated && context.mounted) {
+              context.read<WineLabelBloc>().add(
+                AnalyzeLabelEvent(state.label.storagePath, authState.user.id),
+              );
+            }
+          } else if (state is LabelAnalysisSuccess) {
+            // Navigate to wine selection page
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthAuthenticated && context.mounted) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => WineSelectionPage(
+                    analysisResult: state.analysisResult,
+                    userId: authState.user.id,
                   ),
                 ),
-              ),
-            ],
-          );
+              );
+            }
+          } else if (state is WineLabelError) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         },
-      ),
-    );
-  }
-
-  Widget _buildTopBar(BuildContext context) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 26,
+              // Icon
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(60),
+                ),
+                child: Icon(
+                  Icons.camera_alt,
+                  size: 60,
+                  color: Colors.red[700],
                 ),
               ),
+              const SizedBox(height: 32),
+              
+              // Title
               const Text(
-                'Scanner une étiquette',
+                'Scanner une étiquette de vin',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
+                textAlign: TextAlign.center,
               ),
-              IconButton(
-                onPressed: () {
-                  // TODO: toggle flash
-                },
-                icon: const Icon(
-                  Icons.flash_off,
-                  color: Colors.white,
-                  size: 24,
+              const SizedBox(height: 16),
+              
+              // Description
+              const Text(
+                'Prenez une photo d\'une étiquette de vin pour l\'analyser et obtenir des suggestions de pairings.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
                 ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+              
+              // Buttons
+              Column(
+                children: [
+                  // Camera button
+                  ElevatedButton.icon(
+                    onPressed: () => _takePicture(context),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Prendre une photo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[700],
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Gallery button
+                  OutlinedButton.icon(
+                    onPressed: () => _pickFromGallery(context),
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Choisir depuis la galerie'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red[700],
+                      side: BorderSide(color: Colors.red[700]!),
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomBar() {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildBottomButton(
-                icon: Icons.photo_library_outlined,
-                label: 'GALERIE',
-                onTap: _pickFromGallery,
-              ),
-              _buildCaptureButton(),
-              _buildBottomButton(
-                icon: Icons.cameraswitch_outlined,
-                label: 'ROTATION',
-                onTap: _switchCamera,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCaptureButton() {
-    return GestureDetector(
-      onTap: _takePicture,
-      child: Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 4),
-        ),
-        child: Center(
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primaryWine,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: Colors.white, size: 26),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
       ),
     );
   }
