@@ -63,6 +63,8 @@ Future<void> init() async {
       getAllWines: sl(),
     ),
   );
+
+
   sl.registerFactory(
     () => CellarBloc(
       getAllWines: sl(),

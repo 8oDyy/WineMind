@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
+import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
@@ -30,6 +31,16 @@ class App extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         home: const SplashGate(),
+    return MaterialApp(
+      title: 'WineMind',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => sl<WineBloc>()),
+          BlocProvider(create: (_) => sl<CellarBloc>()),
+        ],
+        child: const MainScreen(),
       ),
     );
   }
