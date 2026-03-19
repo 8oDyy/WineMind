@@ -9,15 +9,6 @@ abstract class WineLabelEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class TakeLabelPictureEvent extends WineLabelEvent {
-  final String userId;
-
-  const TakeLabelPictureEvent(this.userId);
-
-  @override
-  List<Object?> get props => [userId];
-}
-
 class UploadLabelPictureEvent extends WineLabelEvent {
   final String userId;
   final String fileName;

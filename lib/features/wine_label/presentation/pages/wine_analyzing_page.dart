@@ -17,6 +17,7 @@ class WineAnalyzingPage extends StatefulWidget {
 class _WineAnalyzingPageState extends State<WineAnalyzingPage> {
   int _currentStep = 0;
   Timer? _timer;
+  Timer? _timeoutTimer;
 
   @override
   void initState() {
@@ -24,7 +25,7 @@ class _WineAnalyzingPageState extends State<WineAnalyzingPage> {
     _startProgressAnimation();
     
     // Auto-cancel after 45 seconds
-    Timer(const Duration(seconds: 45), () {
+    _timeoutTimer = Timer(const Duration(seconds: 45), () {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -50,6 +51,7 @@ class _WineAnalyzingPageState extends State<WineAnalyzingPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _timeoutTimer?.cancel();
     super.dispose();
   }
 
@@ -98,23 +100,32 @@ class _WineAnalyzingPageState extends State<WineAnalyzingPage> {
             Navigator.of(context).pop();
           }
         },
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Animated icon
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+              // Paul thinking image
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.3),
+                    width: 3,
+                  ),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/img/paulThinking.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               
               // Analyzing text
-              Text(
+              const Text(
                 'Analyse de l\'étiquette...',
                 style: TextStyle(
                   fontSize: 18,
@@ -122,24 +133,24 @@ class _WineAnalyzingPageState extends State<WineAnalyzingPage> {
                   color: Colors.black87,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               
-              Text(
+              const Text(
                 'Paul réfléchit...',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               
               // Progress steps
               Column(
                 children: [
-                  const _ProgressStep(text: '📷 Photo prise', completed: true),
-                  if (_currentStep >= 1) const _ProgressStep(text: '⬆️ Upload en cours', completed: true),
-                  if (_currentStep >= 2) const _ProgressStep(text: '🤖 Analyse IA', completed: true),
-                  if (_currentStep >= 3) const _ProgressStep(text: '🍷 Suggestions', completed: true),
+                  _ProgressStep(text: '📷 Photo prise', completed: true),
+                  if (_currentStep >= 1) _ProgressStep(text: '⬆️ Upload en cours', completed: true),
+                  if (_currentStep >= 2) _ProgressStep(text: '🤖 Analyse IA', completed: true),
+                  if (_currentStep >= 3) _ProgressStep(text: '🍷 Suggestions', completed: true),
                 ],
               ),
             ],

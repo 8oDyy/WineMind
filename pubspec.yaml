@@ -71,3 +71,8 @@ flutter:
   assets:
     - assets/img/logo-winemind.svg
     - assets/img/Paul_Happy.png
+    - assets/img/paulIdee.png
+    - assets/img/paulIdle.png
+    - assets/img/paulSad.png
+    - assets/img/paulSurprised.png
+    - assets/img/paulThinking.png

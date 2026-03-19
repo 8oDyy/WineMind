@@ -200,11 +200,37 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHeroSection() {
     return Column(
       children: [
+        // Large Paul image
+        Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.primaryWine.withValues(alpha: 0.3),
+              width: 4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryWine.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/img/paulIdee.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
         const Text(
-          'Trouvez votre\naccord idéal.',
+          'Bonjour, moi c\'est Paul',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 34,
+            fontSize: 28,
             fontWeight: FontWeight.w900,
             color: AppColors.textPrimary,
             height: 1.1,
@@ -212,12 +238,12 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Découvrez des vins parfaitement\nadaptés à vos goûts et à chaque occasion.',
+          'Votre sommelier personnel.\nPosez-moi vos questions sur le vin !',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 15,
             color: Colors.grey[600],
-            height: 1.4,
+            height: 1.5,
           ),
         ),
       ],
@@ -232,17 +258,17 @@ class _HomePageState extends State<HomePage> {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.cardAccent,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.primaryWine.withValues(alpha: 0.2),
+              color: AppColors.primaryWine.withValues(alpha: 0.3),
               width: 2,
             ),
           ),
-          child: const Icon(
-            Icons.person,
-            color: AppColors.primaryWine,
-            size: 28,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/img/paulIdle.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -274,9 +300,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Bonjour${prenom.isNotEmpty ? ' "$prenom"' : ''}, \n'
-                  'Moi, c\'est Paul, votre assistant sommelier.\n'
-                  'Je suis là pour vous guider et vous aider à trouver le vin parfait.',
+                  prenom.isNotEmpty 
+                      ? 'Ravi de vous revoir $prenom ! Comment puis-je vous aider aujourd\'hui ?'
+                      : 'Comment puis-je vous aider aujourd\'hui ?',
                   style: const TextStyle(
                     fontSize: 13.5,
                     color: AppColors.textPrimary,
@@ -314,17 +340,17 @@ class _HomePageState extends State<HomePage> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: AppColors.cardAccent,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color:
-                                AppColors.primaryWine.withValues(alpha: 0.2),
+                            color: AppColors.primaryWine.withValues(alpha: 0.3),
+                            width: 1.5,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primaryWine,
-                          size: 16,
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/img/paulIdle.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -370,16 +396,17 @@ class _HomePageState extends State<HomePage> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: AppColors.cardAccent,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.primaryWine.withValues(alpha: 0.2),
+                          color: AppColors.primaryWine.withValues(alpha: 0.3),
+                          width: 1.5,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        color: AppColors.primaryWine,
-                        size: 16,
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/img/paulThinking.png',
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),

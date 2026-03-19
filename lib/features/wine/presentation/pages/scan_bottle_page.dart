@@ -6,7 +6,6 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../wine_label/presentation/bloc/wine_label_bloc.dart';
 import '../../../wine_label/presentation/bloc/wine_label_event.dart';
 import '../../../wine_label/presentation/bloc/wine_label_state.dart';
-import '../../../wine_label/presentation/pages/wine_selection_page.dart';
 import '../../../wine_label/presentation/pages/wine_analyzing_page.dart';
 
 class ScanBottlePage extends StatelessWidget {
@@ -22,27 +21,25 @@ class ScanBottlePage extends StatelessWidget {
       
       if (image != null && context.mounted) {
         final bytes = await image.readAsBytes();
+        final authState = context.read<AuthBloc>().state;
         
-        // Navigate to analyzing page first
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const WineAnalyzingPage(),
-          ),
-        ).then((_) {
-          // After navigating, trigger the upload
-          if (context.mounted) {
-            final authState = context.read<AuthBloc>().state;
-            if (authState is AuthAuthenticated) {
-              context.read<WineLabelBloc>().add(
-                UploadLabelPictureEvent(
-                  userId: authState.user.id,
-                  fileName: image.name,
-                  fileBytes: bytes,
-                ),
-              );
-            }
-          }
-        });
+        if (authState is AuthAuthenticated) {
+          // Trigger upload BEFORE navigation
+          context.read<WineLabelBloc>().add(
+            UploadLabelPictureEvent(
+              userId: authState.user.id,
+              fileName: image.name,
+              fileBytes: bytes,
+            ),
+          );
+          
+          // Then navigate to analyzing page
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const WineAnalyzingPage(),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -63,27 +60,25 @@ class ScanBottlePage extends StatelessWidget {
       
       if (image != null && context.mounted) {
         final bytes = await image.readAsBytes();
+        final authState = context.read<AuthBloc>().state;
         
-        // Navigate to analyzing page first
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const WineAnalyzingPage(),
-          ),
-        ).then((_) {
-          // After navigating, trigger the upload
-          if (context.mounted) {
-            final authState = context.read<AuthBloc>().state;
-            if (authState is AuthAuthenticated) {
-              context.read<WineLabelBloc>().add(
-                UploadLabelPictureEvent(
-                  userId: authState.user.id,
-                  fileName: image.name,
-                  fileBytes: bytes,
-                ),
-              );
-            }
-          }
-        });
+        if (authState is AuthAuthenticated) {
+          // Trigger upload BEFORE navigation
+          context.read<WineLabelBloc>().add(
+            UploadLabelPictureEvent(
+              userId: authState.user.id,
+              fileName: image.name,
+              fileBytes: bytes,
+            ),
+          );
+          
+          // Then navigate to analyzing page
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const WineAnalyzingPage(),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -117,19 +112,6 @@ class ScanBottlePage extends StatelessWidget {
             if (authState is AuthAuthenticated && context.mounted) {
               context.read<WineLabelBloc>().add(
                 AnalyzeLabelEvent(state.label.storagePath, authState.user.id),
-              );
-            }
-          } else if (state is LabelAnalysisSuccess) {
-            // Navigate to wine selection page
-            final authState = context.read<AuthBloc>().state;
-            if (authState is AuthAuthenticated && context.mounted) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => WineSelectionPage(
-                    analysisResult: state.analysisResult,
-                    userId: authState.user.id,
-                  ),
-                ),
               );
             }
           } else if (state is WineLabelError) {

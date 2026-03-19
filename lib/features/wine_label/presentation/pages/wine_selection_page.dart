@@ -34,46 +34,51 @@ class _WineSelectionPageState extends State<WineSelectionPage> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: BlocListener<WineLabelBloc, WineLabelState>(
-        listener: (context, state) {
-          if (state is WineAddingSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          } else if (state is WineLabelError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        child: Column(
+      body: Column(
           children: [
-            // Header
+            // Header with Paul surprised
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               color: Colors.grey[50],
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    '🍷 Analyse terminée !',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.red.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/img/paulSurprised.png',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Choisissez le vin à ajouter à votre cave :',
-                    style: TextStyle(fontSize: 14),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🍷 Analyse terminée !',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Choisissez le vin à ajouter à votre cave :',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -93,10 +98,13 @@ class _WineSelectionPageState extends State<WineSelectionPage> {
                       proposal: widget.analysisResult.existingProposal,
                       isSelected: selectedWineId == widget.analysisResult.existingProposal.id && isExistingWine,
                       onTap: () {
-                        setState(() {
-                          selectedWineId = widget.analysisResult.existingProposal.id!;
-                          isExistingWine = true;
-                        });
+                        final existingId = widget.analysisResult.existingProposal.id;
+                        if (existingId != null) {
+                          setState(() {
+                            selectedWineId = existingId;
+                            isExistingWine = true;
+                          });
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
@@ -179,7 +187,6 @@ class _WineSelectionPageState extends State<WineSelectionPage> {
               ),
             ),
           ],
-        ),
       ),
     );
   }

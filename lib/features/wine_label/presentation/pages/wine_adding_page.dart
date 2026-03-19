@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/wine_label_bloc.dart';
 import '../bloc/wine_label_event.dart';
 import '../bloc/wine_label_state.dart';
+import '../../../wine/presentation/bloc/cellar_bloc.dart';
+import '../../../wine/presentation/bloc/cellar_event.dart';
 
 class WineAddingPage extends StatefulWidget {
   const WineAddingPage({super.key});
@@ -12,11 +15,13 @@ class WineAddingPage extends StatefulWidget {
 }
 
 class _WineAddingPageState extends State<WineAddingPage> {
+  Timer? _timeoutTimer;
+
   @override
   void initState() {
     super.initState();
     // Auto-close after 30 seconds if no response
-    Future.delayed(const Duration(seconds: 30), () {
+    _timeoutTimer = Timer(const Duration(seconds: 30), () {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -27,6 +32,12 @@ class _WineAddingPageState extends State<WineAddingPage> {
         Navigator.of(context).pop();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _timeoutTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -51,6 +62,9 @@ class _WineAddingPageState extends State<WineAddingPage> {
       body: BlocListener<WineLabelBloc, WineLabelState>(
         listener: (context, state) {
           if (state is WineAddingSuccess) {
+            // Refresh cellar to show new wine
+            context.read<CellarBloc>().add(const LoadCellarEvent());
+            
             // Show success and go back
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -73,23 +87,32 @@ class _WineAddingPageState extends State<WineAddingPage> {
             Navigator.of(context).pop();
           }
         },
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Loading animation
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: CircularProgressIndicator(
-                  strokeWidth: 4,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+              // Paul happy image
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.3),
+                    width: 3,
+                  ),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/img/Paul_Happy.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               
               // Loading text
-              Text(
+              const Text(
                 'Ajout du vin à votre cave...',
                 style: TextStyle(
                   fontSize: 18,
@@ -97,9 +120,9 @@ class _WineAddingPageState extends State<WineAddingPage> {
                   color: Colors.black87,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               
-              Text(
+              const Text(
                 'Veuillez patienter',
                 style: TextStyle(
                   fontSize: 14,
