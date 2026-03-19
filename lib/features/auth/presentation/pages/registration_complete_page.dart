@@ -3,12 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../app.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_state.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 // import '../widgets/bubble_painter.dart';
@@ -231,8 +227,6 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        final authState = context.read<AuthBloc>().state;
-                        if (authState is! AuthAuthenticated) return;
                         final authState = context.read<AuthBloc>().state;
                         if (authState is! AuthAuthenticated) return;
                         Navigator.pushAndRemoveUntil(
