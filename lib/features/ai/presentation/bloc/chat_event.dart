@@ -16,6 +16,15 @@ class SendMessageEvent extends ChatEvent {
   List<Object?> get props => [message];
 }
 
+class AddAssistantMessageEvent extends ChatEvent {
+  final String message;
+
+  const AddAssistantMessageEvent({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class ResetChatEvent extends ChatEvent {
   const ResetChatEvent();
 }

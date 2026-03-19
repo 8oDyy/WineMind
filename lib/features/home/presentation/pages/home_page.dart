@@ -7,6 +7,12 @@ import '../../../ai/presentation/bloc/chat_event.dart';
 import '../../../ai/presentation/bloc/chat_state.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../dishpicture/presentation/bloc/dish_picture_bloc.dart';
+import '../../../dishpicture/presentation/bloc/dish_picture_event.dart';
+import '../../../dishpicture/presentation/bloc/dish_picture_state.dart';
+import '../../../dishpicture/presentation/bloc/dish_analysis_bloc.dart';
+import '../../../dishpicture/presentation/bloc/dish_analysis_event.dart';
+import '../../../dishpicture/presentation/bloc/dish_analysis_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -45,6 +51,18 @@ class _HomePageState extends State<HomePage> {
     context.read<ChatBloc>().add(SendMessageEvent(message: message));
   }
 
+  void _takePicture() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vous devez être connecté pour prendre une photo')),
+      );
+      return;
+    }
+    
+    context.read<DishPictureBloc>().add(TakePictureEvent(authState.user.id));
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -68,10 +86,54 @@ class _HomePageState extends State<HomePage> {
           children: [
             _buildHeader(),
             Expanded(
-              child: BlocListener<ChatBloc, ChatState>(
-                listener: (context, state) {
-                  if (state is ChatLoaded) _scrollToBottom();
-                },
+              child: MultiBlocListener(
+                listeners: [
+                  BlocListener<DishPictureBloc, DishPictureState>(
+                    listener: (context, state) {
+                      if (state is PictureTaken) {
+                        // Show loading message immediately when picture is taken
+                        context.read<ChatBloc>().add(
+                          AddAssistantMessageEvent(message: "Paul analyse votre photo... 📸"),
+                        );
+                      } else if (state is PictureUploadSuccess) {
+                        // Trigger dish analysis after successful upload
+                        context.read<DishAnalysisBloc>().add(
+                          AnalyzeDishEvent(state.picture.storagePath),
+                        );
+                      } else if (state is DishPictureError) {
+                        // Replace loading message with error
+                        context.read<ChatBloc>().add(
+                          AddAssistantMessageEvent(message: "Désolé, erreur lors de la prise de photo. Réessayez ! 😅"),
+                        );
+                      }
+                    },
+                  ),
+                  BlocListener<DishAnalysisBloc, DishAnalysisState>(
+                    listener: (context, state) {
+                      if (state is DishAnalysisLoading) {
+                        // Update loading message
+                        context.read<ChatBloc>().add(
+                          AddAssistantMessageEvent(message: "Paul réfléchit à votre plat... 🤔"),
+                        );
+                      } else if (state is DishAnalysisSuccess) {
+                        // Replace loading message with actual response
+                        context.read<ChatBloc>().add(
+                          AddAssistantMessageEvent(message: state.chatResponse),
+                        );
+                      } else if (state is DishAnalysisError) {
+                        // Replace loading message with error message from API
+                        context.read<ChatBloc>().add(
+                          AddAssistantMessageEvent(message: state.message),
+                        );
+                      }
+                    },
+                  ),
+                  BlocListener<ChatBloc, ChatState>(
+                    listener: (context, state) {
+                      if (state is ChatLoaded) _scrollToBottom();
+                    },
+                  ),
+                ],
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -434,9 +496,7 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {
-              // TODO: Implement camera / scan feature
-            },
+            onTap: _takePicture,
             child: Container(
               width: 44,
               height: 44,
