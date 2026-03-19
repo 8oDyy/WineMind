@@ -24,7 +24,6 @@ abstract class AuthRemoteDataSource {
   });
  
   Future<void> deleteAccount({required String userId});
-
   UserModel? getCurrentUser();
 }
  
