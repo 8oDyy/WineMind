@@ -30,10 +30,24 @@ import 'features/wine/domain/usecases/update_wine_stock.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 
+// DishPicture
+import 'features/dishpicture/data/datasources/dish_picture_remote_data_source.dart';
+import 'features/dishpicture/data/repositories/dish_picture_repository_impl.dart';
+import 'features/dishpicture/domain/repositories/dish_picture_repository.dart';
+import 'features/dishpicture/domain/usecases/upload_picture.dart';
+import 'features/dishpicture/presentation/bloc/dish_picture_bloc.dart';
+
+// DishAnalysis
+import 'features/dishpicture/data/datasources/dish_analysis_remote_data_source.dart';
+import 'features/dishpicture/data/repositories/dish_analysis_repository_impl.dart';
+import 'features/dishpicture/domain/repositories/dish_analysis_repository.dart';
+import 'features/dishpicture/domain/usecases/analyze_dish.dart';
+import 'features/dishpicture/presentation/bloc/dish_analysis_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  if (sl.isRegistered<WineBloc>()) return;
+  if (sl.isRegistered<DishAnalysisBloc>()) return;
 
   // ── Core ──
   sl.registerLazySingleton<SupabaseClient>(
@@ -112,5 +126,40 @@ Future<void> init() async {
   // Data source
   sl.registerLazySingleton<WineRemoteDataSource>(
     () => WineRemoteDataSourceImpl(sl()),
+  );
+
+  // ── DishPicture ──
+  // Bloc
+  sl.registerFactory(
+    () => DishPictureBloc(uploadPicture: sl()),
+  );
+  // Use case
+  sl.registerLazySingleton(() => UploadPicture(sl()));
+  // Repository
+  sl.registerLazySingleton<DishPictureRepository>(
+    () => DishPictureRepositoryImpl(remoteDataSource: sl()),
+  );
+  // Data source
+  sl.registerLazySingleton<DishPictureRemoteDataSource>(
+    () => DishPictureRemoteDataSourceImpl(sl()),
+  );
+
+  // ── DishAnalysis ──
+  // Bloc
+  sl.registerFactory(
+    () => DishAnalysisBloc(analyzeDish: sl()),
+  );
+  // Use case
+  sl.registerLazySingleton(() => AnalyzeDish(sl()));
+  // Repository
+  sl.registerLazySingleton<DishAnalysisRepository>(
+    () => DishAnalysisRepositoryImpl(remoteDataSource: sl()),
+  );
+  // Data source
+  sl.registerLazySingleton<DishAnalysisRemoteDataSource>(
+    () => DishAnalysisRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: 'http://4.233.146.238:8000',
+    ),
   );
 }

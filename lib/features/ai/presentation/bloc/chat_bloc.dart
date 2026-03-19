@@ -9,11 +9,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ChatBloc({required this.sendChatMessage}) : super(const ChatInitial()) {
     on<SendMessageEvent>(_onSendMessage);
+    on<AddAssistantMessageEvent>(_onAddAssistantMessage);
     on<ResetChatEvent>(_onReset);
   }
 
   void _onReset(ResetChatEvent event, Emitter<ChatState> emit) {
     emit(const ChatInitial());
+  }
+
+  void _onAddAssistantMessage(
+    AddAssistantMessageEvent event,
+    Emitter<ChatState> emit,
+  ) {
+    final currentMessages = state is ChatLoaded
+        ? (state as ChatLoaded).messages
+        : <ChatMessage>[];
+
+    final assistantMessage = ChatMessage(
+      content: event.message,
+      role: ChatRole.assistant,
+    );
+
+    final updatedMessages = [...currentMessages, assistantMessage];
+    emit(ChatLoaded(messages: updatedMessages));
   }
 
   Future<void> _onSendMessage(

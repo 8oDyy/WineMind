@@ -9,6 +9,8 @@ import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/ai/presentation/bloc/chat_bloc.dart';
 import 'features/ai/presentation/bloc/chat_event.dart';
+import 'features/dishpicture/presentation/bloc/dish_picture_bloc.dart';
+import 'features/dishpicture/presentation/bloc/dish_analysis_bloc.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
@@ -29,6 +31,8 @@ class App extends StatelessWidget {
         BlocProvider(create: (_) => sl<WineBloc>()),
         BlocProvider(create: (_) => sl<CellarBloc>()),
         BlocProvider(create: (_) => sl<ChatBloc>()),
+        BlocProvider(create: (_) => sl<DishPictureBloc>()),
+        BlocProvider(create: (_) => sl<DishAnalysisBloc>()),
       ],
       child: MaterialApp(
         title: 'WineMind',
@@ -104,24 +108,24 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthUnauthenticated) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const AuthChoicePage()),
-            (route) => false,
-          );
-        }
-      },
-      child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
-        ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
-        ),
+        listener: (context, state) {
+          if (state is AuthUnauthenticated) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const AuthChoicePage()),
+              (route) => false,
+            );
+          }
+        },
+        child: Scaffold(
+          body: IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
+          bottomNavigationBar: BottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: (i) => setState(() => _currentIndex = i),
+          ),
       ),
     );
   }
