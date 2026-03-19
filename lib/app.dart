@@ -26,6 +26,7 @@ class App extends StatelessWidget {
         BlocProvider(create: (_) => sl<AuthBloc>()),
         BlocProvider(create: (_) => sl<WineBloc>()),
         BlocProvider(create: (_) => sl<CellarBloc>()),
+        BlocProvider(create: (_) => sl<ChatBloc>()),
       ],
       child: MaterialApp(
         title: 'WineMind',

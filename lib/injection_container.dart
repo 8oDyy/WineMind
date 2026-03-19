@@ -12,6 +12,13 @@ import 'features/auth/domain/usecases/logout_user.dart';
 import 'features/auth/domain/usecases/register_user.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
+// AI
+import 'features/ai/data/datasources/ai_remote_data_source.dart';
+import 'features/ai/data/repositories/ai_repository_impl.dart';
+import 'features/ai/domain/repositories/ai_repository.dart';
+import 'features/ai/domain/usecases/send_chat_message.dart';
+import 'features/ai/presentation/bloc/chat_bloc.dart';
+
 // Wine
 import 'features/wine/data/datasources/wine_remote_data_source.dart';
 import 'features/wine/data/repositories/wine_repository_impl.dart';
@@ -56,6 +63,22 @@ Future<void> init() async {
   // Data source
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),
+  );
+
+  // ── AI ──
+  // Bloc
+  sl.registerFactory(
+    () => ChatBloc(sendChatMessage: sl()),
+  );
+  // Use cases
+  sl.registerLazySingleton(() => SendChatMessage(sl()));
+  // Repository
+  sl.registerLazySingleton<AiRepository>(
+    () => AiRepositoryImpl(remoteDataSource: sl()),
+  );
+  // Data source
+  sl.registerLazySingleton<AiRemoteDataSource>(
+    () => AiRemoteDataSourceImpl(apiKey: null),
   );
 
   // ── Wine ──
