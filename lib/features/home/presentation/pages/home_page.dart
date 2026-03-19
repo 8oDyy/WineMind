@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../ai/domain/entities/chat_message.dart';
 import '../../../ai/presentation/bloc/chat_bloc.dart';
@@ -166,22 +167,9 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'WM',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryWine,
-              fontStyle: FontStyle.italic,
-              letterSpacing: -1,
-              shadows: [
-                Shadow(
-                  color: AppColors.primaryWine.withValues(alpha: 0.15),
-                  offset: const Offset(2, 2),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
+          SvgPicture.asset(
+            'assets/img/logo-winemind.svg',
+            height: 36,
           ),
           const Text(
             'WineMind',
@@ -228,22 +216,11 @@ class _HomePageState extends State<HomePage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Container(
+        Image.asset(
+          'assets/img/Paul_Happy.png',
           width: 56,
           height: 56,
-          decoration: BoxDecoration(
-            color: AppColors.cardAccent,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.primaryWine.withValues(alpha: 0.2),
-              width: 2,
-            ),
-          ),
-          child: const Icon(
-            Icons.person,
-            color: AppColors.primaryWine,
-            size: 28,
-          ),
+          fit: BoxFit.contain,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -274,7 +251,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Bonjour${prenom.isNotEmpty ? ' "$prenom"' : ''}, \n'
+                  'Bonjour${prenom.isNotEmpty ? ' ${prenom[0].toUpperCase()}${prenom.substring(1)}' : ''} !\n'
                   'Moi, c\'est Paul, votre assistant sommelier.\n'
                   'Je suis là pour vous guider et vous aider à trouver le vin parfait.',
                   style: const TextStyle(
@@ -310,22 +287,11 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!isUser) ...[
-                      Container(
+                      Image.asset(
+                        'assets/img/Paul_Happy.png',
                         width: 32,
                         height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.cardAccent,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                AppColors.primaryWine.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primaryWine,
-                          size: 16,
-                        ),
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(width: 8),
                     ],
@@ -366,21 +332,11 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Container(
+                    Image.asset(
+                      'assets/img/Paul_Happy.png',
                       width: 32,
                       height: 32,
-                      decoration: BoxDecoration(
-                        color: AppColors.cardAccent,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primaryWine.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: AppColors.primaryWine,
-                        size: 16,
-                      ),
+                      fit: BoxFit.contain,
                     ),
                     const SizedBox(width: 8),
                     Container(
