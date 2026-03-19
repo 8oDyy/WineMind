@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../injection_container.dart';
 import '../../domain/entities/wine.dart';
+import '../../domain/usecases/update_wine_stock.dart';
+import '../bloc/wine_detail_bloc.dart';
+import '../pages/wine_detail_page.dart';
 
 class WineLastCard extends StatelessWidget {
   final Wine wine;
@@ -9,7 +14,19 @@ class WineLastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => WineDetailBloc(
+              wine: wine,
+              updateWineStock: sl<UpdateWineStock>(),
+            ),
+            child: const WineDetailPage(),
+          ),
+        ),
+      ),
+      child: Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -122,6 +139,7 @@ class WineLastCard extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
+      ),
       ),
     );
   }

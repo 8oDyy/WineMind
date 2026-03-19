@@ -6,6 +6,7 @@ import '../bloc/cellar_bloc.dart';
 import '../bloc/cellar_event.dart';
 import '../bloc/cellar_state.dart';
 import '../widgets/wine_cellar_card.dart';
+import 'scan_bottle_page.dart';
 
 class CellarPage extends StatefulWidget {
   const CellarPage({super.key});
@@ -23,7 +24,6 @@ class _CellarPageState extends State<CellarPage> {
     'Rosé',
     'Champagne',
   ];
-
   @override
   void initState() {
     super.initState();
@@ -46,7 +46,9 @@ class _CellarPageState extends State<CellarPage> {
           final wines = isLoaded ? state.filteredWines : <Wine>[];
           final allWines = isLoaded ? state.allWines : <Wine>[];
           final selectedType = isLoaded ? state.selectedType : 'Tous';
-          final totalStock = allWines.fold<int>(0, (sum, w) => sum + w.stock);
+          final totalStock = isLoaded
+              ? allWines.fold<int>(0, (sum, w) => sum + w.stock)
+              : 0;
 
           return Column(
             children: [
@@ -197,7 +199,14 @@ class _CellarPageState extends State<CellarPage> {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () async {
+                  // TODO: exploiter le path retourné pour la reconnaissance d'étiquette
+                  await Navigator.of(context).push<String?>(
+                    MaterialPageRoute(
+                      builder: (_) => const ScanBottlePage(),
+                    ),
+                  );
+                },
                 child: Container(
                   width: 48,
                   height: 48,
