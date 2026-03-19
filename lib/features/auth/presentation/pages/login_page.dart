@@ -83,7 +83,7 @@ class _LoginViewState extends State<_LoginView> {
           } else if (state is AuthAuthenticated) {
             Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const MainScreen()),
+                MaterialPageRoute(builder: (_) => MainScreen(user: state.user)),
                 (route) => false,
               );
           }

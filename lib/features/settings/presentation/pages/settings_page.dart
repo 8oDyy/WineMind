@@ -76,8 +76,9 @@ class _SettingsBody extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
+              final bloc = context.read<AuthBloc>();
               Navigator.pop(context);
-              context.read<AuthBloc>().add(const LogoutEvent());
+              bloc.add(const LogoutEvent());
             },
             child: const Text(
               'Déconnecter',
@@ -104,10 +105,9 @@ class _SettingsBody extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
+              final bloc = context.read<AuthBloc>();
               Navigator.pop(context);
-              context
-                  .read<AuthBloc>()
-                  .add(DeleteAccountEvent(userId: userId));
+              bloc.add(DeleteAccountEvent(userId: userId));
             },
             child: const Text(
               'Supprimer',
