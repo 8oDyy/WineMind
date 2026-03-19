@@ -4,12 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'features/auth/domain/entities/user_entity.dart';
+import 'features/auth/domain/entities/user_entity.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/ai/presentation/bloc/chat_bloc.dart';
-import 'features/ai/presentation/bloc/chat_event.dart' as chat_events;
+import 'features/ai/presentation/bloc/chat_event.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
+import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
@@ -65,7 +67,7 @@ class _SplashGateState extends State<SplashGate> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
-          context.read<ChatBloc>().add(const chat_events.ResetChatEvent());
+          context.read<ChatBloc>().add(const ResetChatEvent());
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
@@ -86,6 +88,9 @@ class MainScreen extends StatefulWidget {
   final UserEntity user;
 
   const MainScreen({super.key, required this.user});
+  final UserEntity user;
+
+  const MainScreen({super.key, required this.user});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -93,6 +98,28 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+
+  late final List<Widget> _pages = [
+    const HomePage(),
+    const WinesPage(),
+    const CellarPage(),
+    SettingsPage(user: widget.user),
+  ];
+
+  void _onScan() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(30),
+          child: Text(
+            '📷 Scanner une bouteille',
+            style: TextStyle(fontSize: 20),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
