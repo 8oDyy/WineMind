@@ -63,6 +63,7 @@ class _SplashGateState extends State<SplashGate> {
       builder: (context, state) {
         if (state is AuthAuthenticated) return MainScreen(user: state.user);
         if (state is AuthUnauthenticated) return const AuthChoicePage();
+        if (state is AuthError) return const AuthChoicePage();
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );

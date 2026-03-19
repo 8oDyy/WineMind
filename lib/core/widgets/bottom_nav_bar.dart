@@ -34,8 +34,8 @@ class BottomNavBar extends StatelessWidget {
           label: 'Ma cave',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.more_horiz),
-          label: 'Plus',
+          icon: Icon(Icons.settings),
+          label: 'Paramètres',
         ),
       ],
     );

@@ -64,6 +64,7 @@ class _SettingsBody extends StatelessWidget {
   }
 
   void _confirmLogout(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -76,9 +77,8 @@ class _SettingsBody extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final bloc = context.read<AuthBloc>();
               Navigator.pop(context);
-              bloc.add(const LogoutEvent());
+              authBloc.add(const LogoutEvent());
             },
             child: const Text(
               'Déconnecter',
@@ -91,6 +91,7 @@ class _SettingsBody extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context, String userId) {
+    final authBloc = context.read<AuthBloc>();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -105,9 +106,8 @@ class _SettingsBody extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final bloc = context.read<AuthBloc>();
               Navigator.pop(context);
-              bloc.add(DeleteAccountEvent(userId: userId));
+              authBloc.add(DeleteAccountEvent(userId: userId));
             },
             child: const Text(
               'Supprimer',

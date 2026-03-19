@@ -232,7 +232,7 @@ class _RegistrationCompletePageState extends State<RegistrationCompletePage>
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => MainScreen(user: authState.user),
+                            builder: (_) => const SplashGate(),
                           ),
                           (route) => false,
                         );
