@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Auth
@@ -11,6 +12,13 @@ import 'features/auth/domain/usecases/login_user.dart';
 import 'features/auth/domain/usecases/logout_user.dart';
 import 'features/auth/domain/usecases/register_user.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+
+// AI
+import 'features/ai/data/datasources/ai_remote_data_source.dart';
+import 'features/ai/data/repositories/ai_repository_impl.dart';
+import 'features/ai/domain/repositories/ai_repository.dart';
+import 'features/ai/domain/usecases/send_chat_message.dart';
+import 'features/ai/presentation/bloc/chat_bloc.dart';
 
 // Wine
 import 'features/wine/data/datasources/wine_remote_data_source.dart';
@@ -31,6 +39,7 @@ Future<void> init() async {
   sl.registerLazySingleton<SupabaseClient>(
     () => Supabase.instance.client,
   );
+  sl.registerLazySingleton<http.Client>(() => http.Client());
 
   // ── Auth ──
   // Bloc
@@ -56,6 +65,25 @@ Future<void> init() async {
   // Data source
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),
+  );
+
+  // ── AI ──
+  // Bloc
+  sl.registerFactory(
+    () => ChatBloc(sendChatMessage: sl()),
+  );
+  // Use cases
+  sl.registerLazySingleton(() => SendChatMessage(sl()));
+  // Repository
+  sl.registerLazySingleton<AiRepository>(
+    () => AiRepositoryImpl(remoteDataSource: sl()),
+  );
+  // Data source
+  sl.registerLazySingleton<AiRemoteDataSource>(
+    () => AiRemoteDataSourceImpl(
+      client: sl<http.Client>(),
+      baseUrl: 'http://4.233.146.238:8000',
+    ),
   );
 
   // ── Wine ──

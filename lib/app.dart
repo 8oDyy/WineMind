@@ -7,12 +7,14 @@ import 'features/auth/domain/entities/user_entity.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/ai/presentation/bloc/chat_bloc.dart';
+import 'features/ai/presentation/bloc/chat_event.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/wine/presentation/pages/cellar_page.dart';
-import 'features/wine/presentation/pages/home_page.dart';
+import 'features/home/presentation/pages/home_page.dart';
 import 'features/wine/presentation/pages/wines_page.dart';
 import 'injection_container.dart';
 
@@ -26,6 +28,7 @@ class App extends StatelessWidget {
         BlocProvider(create: (_) => sl<AuthBloc>()),
         BlocProvider(create: (_) => sl<WineBloc>()),
         BlocProvider(create: (_) => sl<CellarBloc>()),
+        BlocProvider(create: (_) => sl<ChatBloc>()),
       ],
       child: MaterialApp(
         title: 'WineMind',
@@ -59,15 +62,22 @@ class _SplashGateState extends State<SplashGate> {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return const AuthChoicePage();
 
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthAuthenticated) return MainScreen(user: state.user);
-        if (state is AuthUnauthenticated) return const AuthChoicePage();
-        if (state is AuthError) return const AuthChoicePage();
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          context.read<ChatBloc>().add(const ResetChatEvent());
+        }
       },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) return MainScreen(user: state.user);
+          if (state is AuthUnauthenticated) return const AuthChoicePage();
+          if (state is AuthError) return const AuthChoicePage();
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
     );
   }
 }
@@ -84,15 +94,15 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
+  late final List<Widget> _pages = [
+    const HomePage(),
+    const WinesPage(),
+    const CellarPage(),
+    SettingsPage(user: widget.user),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const HomePage(),
-      const WinesPage(),
-      const CellarPage(),
-      SettingsPage(user: widget.user),
-    ];
-
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
@@ -106,7 +116,7 @@ class _MainScreenState extends State<MainScreen> {
       child: Scaffold(
         body: IndexedStack(
           index: _currentIndex,
-          children: pages,
+          children: _pages,
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: _currentIndex,
