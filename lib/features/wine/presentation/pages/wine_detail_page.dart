@@ -509,9 +509,9 @@ class WineDetailPage extends StatelessWidget {
 
   void _updateStock(BuildContext context, Wine wine, int delta) {
     final newStock = wine.stock + delta;
-    if (newStock < 0) return;
+    if (newStock < 0 || wine.cellarId == null) return;
     context.read<WineDetailBloc>().add(
-      UpdateStockEvent(wineName: wine.name, newStock: newStock),
+      UpdateStockEvent(cellarId: wine.cellarId!, newStock: newStock),
     );
   }
 

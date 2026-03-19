@@ -37,6 +37,7 @@ class WineRepositoryImpl implements WineRepository {
     try {
       final model = WineModel(
         id: wine.id,
+        cellarId: wine.cellarId,
         name: wine.name,
         year: wine.year,
         type: wine.type,
@@ -45,6 +46,22 @@ class WineRepositoryImpl implements WineRepository {
         points: wine.points,
         apogee: wine.apogee,
         stock: wine.stock,
+        description: wine.description,
+        designation: wine.designation,
+        price: wine.price,
+        province: wine.province,
+        country: wine.country,
+        variety: wine.variety,
+        winery: wine.winery,
+        location: wine.location,
+        foodPairings: wine.foodPairings,
+        bodyLevel: wine.bodyLevel,
+        tanninLevel: wine.tanninLevel,
+        fruitLevel: wine.fruitLevel,
+        imageUrl: wine.imageUrl,
+        notes: wine.notes,
+        purchaseDate: wine.purchaseDate,
+        purchasePrice: wine.purchasePrice,
       );
       await remoteDataSource.addToCellar(model);
       return const Right(null);
@@ -74,32 +91,4 @@ class WineRepositoryImpl implements WineRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, Wine>> updateWineStock(String wineName, int newStock) async {
-    try {
-      await remoteDataSource.updateCellarStock(wineName, newStock);
-      return Right(Wine(
-        name: wineName,
-        year: '',
-        type: '',
-        region: '',
-        rating: 0,
-        points: 0,
-        apogee: '',
-        stock: newStock,
-      ));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message ?? 'Erreur serveur'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, Wine>> updateWineStock(String wineName, int newStock) async {
-    try {
-      final wine = await localDataSource.updateWineStock(wineName, newStock);
-      return Right(wine);
-    } on CacheException {
-      return Left(CacheFailure());
-    }
-  }
 }

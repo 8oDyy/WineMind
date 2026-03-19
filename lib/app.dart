@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
-import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
@@ -31,40 +30,42 @@ class App extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         home: const SplashGate(),
-    return MaterialApp(
-      title: 'WineMind',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => sl<WineBloc>()),
-          BlocProvider(create: (_) => sl<CellarBloc>()),
-        ],
-        child: const MainScreen(),
       ),
     );
   }
 }
 
-class SplashGate extends StatelessWidget {
+class SplashGate extends StatefulWidget {
   const SplashGate({super.key});
+
+  @override
+  State<SplashGate> createState() => _SplashGateState();
+}
+
+class _SplashGateState extends State<SplashGate> {
+  @override
+  void initState() {
+    super.initState();
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      context.read<AuthBloc>().add(const CheckAuthStatusEvent());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      context.read<AuthBloc>().add(const CheckAuthStatusEvent());
-      return BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthAuthenticated) return const MainScreen();
-          if (state is AuthUnauthenticated) return const LoginPage();
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        },
-      );
-    }
-    return const LoginPage();
+    if (session == null) return const LoginPage();
+
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is AuthAuthenticated) return const MainScreen();
+        if (state is AuthUnauthenticated) return const LoginPage();
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
   }
 }
 

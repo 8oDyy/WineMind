@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/wine.dart';
 import '../bloc/cellar_bloc.dart';
 import '../bloc/cellar_event.dart';
 import '../bloc/cellar_state.dart';
@@ -23,15 +24,10 @@ class _CellarPageState extends State<CellarPage> {
     'Rosé',
     'Champagne',
   ];
-  bool _isInitialized = false;
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      context.read<CellarBloc>().add(const LoadCellarEvent());
-      _isInitialized = true;
-    }
+  void initState() {
+    super.initState();
+    context.read<CellarBloc>().add(const LoadCellarEvent());
   }
 
   @override
@@ -47,11 +43,11 @@ class _CellarPageState extends State<CellarPage> {
       body: BlocBuilder<CellarBloc, CellarState>(
         builder: (context, state) {
           final isLoaded = state is CellarLoaded;
-          final wines = isLoaded ? state.filteredWines : [];
-          final allWines = isLoaded ? state.allWines : [];
+          final wines = isLoaded ? state.filteredWines : <Wine>[];
+          final allWines = isLoaded ? state.allWines : <Wine>[];
           final selectedType = isLoaded ? state.selectedType : 'Tous';
           final totalStock = isLoaded
-              ? allWines.fold<int>(0, (sum, w) => sum + w.stock as int)
+              ? allWines.fold<int>(0, (sum, w) => sum + w.stock)
               : 0;
 
           return Column(

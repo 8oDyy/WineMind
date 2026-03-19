@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../injection_container.dart';
 import '../../domain/entities/wine.dart';
 import '../../domain/usecases/update_wine_stock.dart';
 import '../bloc/wine_detail_bloc.dart';
@@ -20,7 +20,7 @@ class WineLastCard extends StatelessWidget {
           builder: (_) => BlocProvider(
             create: (_) => WineDetailBloc(
               wine: wine,
-              updateWineStock: GetIt.instance<UpdateWineStock>(),
+              updateWineStock: sl<UpdateWineStock>(),
             ),
             child: const WineDetailPage(),
           ),

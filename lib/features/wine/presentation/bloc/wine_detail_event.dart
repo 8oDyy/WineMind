@@ -8,11 +8,11 @@ abstract class WineDetailEvent extends Equatable {
 }
 
 class UpdateStockEvent extends WineDetailEvent {
-  final String wineName;
+  final String cellarId;
   final int newStock;
 
-  const UpdateStockEvent({required this.wineName, required this.newStock});
+  const UpdateStockEvent({required this.cellarId, required this.newStock});
 
   @override
-  List<Object?> get props => [wineName, newStock];
+  List<Object?> get props => [cellarId, newStock];
 }
