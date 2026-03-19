@@ -23,6 +23,8 @@ abstract class AuthRemoteDataSource {
     String? objectif,
   });
  
+  Future<void> deleteAccount({required String userId});
+
   UserModel? getCurrentUser();
 }
  
@@ -114,6 +116,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     await _client.from('profiles').update(updates).eq('id', userId);
   }
  
+  @override
+  Future<void> deleteAccount({required String userId}) async {
+    // Sécurité : toujours utiliser l'ID de l'utilisateur connecté
+    final currentUserId = _client.auth.currentUser?.id;
+    if (currentUserId == null) {
+      throw Exception('Utilisateur non connecté');
+    }
+    if (currentUserId != userId) {
+      throw Exception('Opération non autorisée');
+    }
+    // NOTE: Ceci supprime le profil mais PAS le compte auth Supabase.
+    // Pour supprimer le compte auth, il faut une Edge Function ou un backend
+    // avec la service_role key utilisant admin.deleteUser().
+    await _client.from('profiles').delete().eq('id', currentUserId);
+    await _client.auth.signOut();
+  }
+
   @override
   UserModel? getCurrentUser() {
     final user = _client.auth.currentUser;

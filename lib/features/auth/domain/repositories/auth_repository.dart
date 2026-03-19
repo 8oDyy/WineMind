@@ -24,5 +24,7 @@ abstract class AuthRepository {
     String? objectif,
   });
 
+  Future<Either<Failure, void>> deleteAccount({required String userId});
+
   UserEntity? getCurrentUser();
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../domain/usecases/delete_account.dart';
 import '../../domain/usecases/get_current_user.dart';
 import '../../domain/usecases/login_user.dart';
 import '../../domain/usecases/logout_user.dart';
@@ -13,17 +14,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RegisterUser registerUser;
   final LogoutUser logoutUser;
   final GetCurrentUser getCurrentUser;
+  final DeleteAccount deleteAccount;
 
   AuthBloc({
     required this.loginUser,
     required this.registerUser,
     required this.logoutUser,
     required this.getCurrentUser,
+    required this.deleteAccount,
   }) : super(const AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<LoginWithEmailPasswordEvent>(_onLoginWithEmailPassword);
     on<RegisterWithEmailPasswordEvent>(_onRegisterWithEmailPassword);
     on<LogoutEvent>(_onLogout);
+    on<DeleteAccountEvent>(_onDeleteAccount);
   }
 
   Future<void> _onCheckAuthStatus(
@@ -81,6 +85,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
 
     final result = await logoutUser(NoParams());
+
+    result.fold(
+      (failure) => emit(AuthError(message: _mapFailure(failure))),
+      (_) => emit(const AuthUnauthenticated()),
+    );
+  }
+
+  Future<void> _onDeleteAccount(
+    DeleteAccountEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+
+    final result = await deleteAccount(DeleteAccountParams(userId: event.userId));
 
     result.fold(
       (failure) => emit(AuthError(message: _mapFailure(failure))),

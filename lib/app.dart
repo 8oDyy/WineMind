@@ -3,13 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
+import 'features/auth/domain/entities/user_entity.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
-import 'features/auth/presentation/pages/login_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
+import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/wine/presentation/pages/cellar_page.dart';
 import 'features/wine/presentation/pages/home_page.dart';
 import 'features/wine/presentation/pages/wines_page.dart';
@@ -60,8 +61,9 @@ class _SplashGateState extends State<SplashGate> {
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        if (state is AuthAuthenticated) return const MainScreen();
+        if (state is AuthAuthenticated) return MainScreen(user: state.user);
         if (state is AuthUnauthenticated) return const AuthChoicePage();
+        if (state is AuthError) return const AuthChoicePage();
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
@@ -71,7 +73,9 @@ class _SplashGateState extends State<SplashGate> {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final UserEntity user;
+
+  const MainScreen({super.key, required this.user});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -80,39 +84,34 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    WinesPage(),
-    CellarPage(),
-    SizedBox.shrink(),
-  ];
-
-  void _onScan() {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(30),
-          child: Text(
-            '📷 Scanner une bouteille',
-            style: TextStyle(fontSize: 20),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        onScan: _onScan,
+    final pages = [
+      const HomePage(),
+      const WinesPage(),
+      const CellarPage(),
+      SettingsPage(user: widget.user),
+    ];
+
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const AuthChoicePage()),
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: pages,
+        ),
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: _currentIndex,
+          onTap: (i) => setState(() => _currentIndex = i),
+        ),
       ),
     );
   }

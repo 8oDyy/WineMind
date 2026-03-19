@@ -48,3 +48,12 @@ class LogoutEvent extends AuthEvent {
 class CheckAuthStatusEvent extends AuthEvent {
   const CheckAuthStatusEvent();
 }
+
+class DeleteAccountEvent extends AuthEvent {
+  final String userId;
+
+  const DeleteAccountEvent({required this.userId});
+
+  @override
+  List<Object?> get props => [userId];
+}
