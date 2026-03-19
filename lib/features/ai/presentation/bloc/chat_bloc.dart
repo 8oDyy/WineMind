@@ -9,6 +9,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ChatBloc({required this.sendChatMessage}) : super(const ChatInitial()) {
     on<SendMessageEvent>(_onSendMessage);
+    on<ResetChatEvent>(_onReset);
+  }
+
+  void _onReset(ResetChatEvent event, Emitter<ChatState> emit) {
+    emit(const ChatInitial());
   }
 
   Future<void> _onSendMessage(

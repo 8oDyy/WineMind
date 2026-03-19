@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/ai_repository.dart';
@@ -20,8 +21,10 @@ class AiRepositoryImpl implements AiRepository {
         content: response,
         role: ChatRole.assistant,
       ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Erreur serveur'));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Erreur inattendue: ${e.runtimeType}'));
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Auth
@@ -38,6 +39,7 @@ Future<void> init() async {
   sl.registerLazySingleton<SupabaseClient>(
     () => Supabase.instance.client,
   );
+  sl.registerLazySingleton<http.Client>(() => http.Client());
 
   // ── Auth ──
   // Bloc
@@ -78,7 +80,10 @@ Future<void> init() async {
   );
   // Data source
   sl.registerLazySingleton<AiRemoteDataSource>(
-    () => AiRemoteDataSourceImpl(apiKey: null),
+    () => AiRemoteDataSourceImpl(
+      client: sl<http.Client>(),
+      baseUrl: 'http://4.233.146.238:8000',
+    ),
   );
 
   // ── Wine ──

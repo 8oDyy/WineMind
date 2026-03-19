@@ -45,6 +45,18 @@ class _HomePageState extends State<HomePage> {
     context.read<ChatBloc>().add(SendMessageEvent(message: message));
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final prenom = _getUserPrenom(context);
@@ -54,29 +66,31 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──
             _buildHeader(),
-            // ── Content (scrollable) ──
             Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 32),
-                    _buildHeroSection(),
-                    const SizedBox(height: 32),
-                    _buildChatBubble(prenom),
-                    const SizedBox(height: 16),
-                    _buildChatMessages(),
-                    const SizedBox(height: 16),
-                    _buildQuickActions(),
-                    const SizedBox(height: 16),
-                  ],
+              child: BlocListener<ChatBloc, ChatState>(
+                listener: (context, state) {
+                  if (state is ChatLoaded) _scrollToBottom();
+                },
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 32),
+                      _buildHeroSection(),
+                      const SizedBox(height: 32),
+                      _buildChatBubble(prenom),
+                      const SizedBox(height: 16),
+                      _buildChatMessages(),
+                      const SizedBox(height: 16),
+                      _buildQuickActions(),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
             ),
-            // ── Input bar (fixed bottom) ──
             _buildInputBar(),
           ],
         ),
@@ -152,7 +166,6 @@ class _HomePageState extends State<HomePage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Avatar Paul
         Container(
           width: 56,
           height: 56,
@@ -171,7 +184,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         const SizedBox(width: 12),
-        // Bulle de message
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -225,16 +237,73 @@ class _HomePageState extends State<HomePage> {
         }
 
         return Column(
-          children: state.messages.map((msg) {
-            final isUser = msg.role == ChatRole.user;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment:
-                    isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isUser) ...[
+          children: [
+            ...state.messages.map((msg) {
+              final isUser = msg.role == ChatRole.user;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment:
+                      isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isUser) ...[
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppColors.cardAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                AppColors.primaryWine.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.primaryWine,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isUser
+                              ? AppColors.primaryWine
+                              : const Color(0xFFFDF2F2),
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(16),
+                            topRight: const Radius.circular(16),
+                            bottomLeft: Radius.circular(isUser ? 16 : 4),
+                            bottomRight: Radius.circular(isUser ? 4 : 16),
+                          ),
+                        ),
+                        child: Text(
+                          msg.content,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color:
+                                isUser ? Colors.white : AppColors.textPrimary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            if (state.isTyping)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
                     Container(
                       width: 32,
                       height: 32,
@@ -252,38 +321,49 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                  ],
-                  Flexible(
-                    child: Container(
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: isUser
-                            ? AppColors.primaryWine
-                            : const Color(0xFFFDF2F2),
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(16),
-                          topRight: const Radius.circular(16),
-                          bottomLeft: Radius.circular(isUser ? 16 : 4),
-                          bottomRight: Radius.circular(isUser ? 4 : 16),
+                        color: const Color(0xFFFDF2F2),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                          bottomLeft: Radius.circular(4),
                         ),
                       ),
-                      child: Text(
-                        msg.content,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          color: isUser ? Colors.white : AppColors.textPrimary,
-                          height: 1.4,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primaryWine.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Paul écrit...',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[500],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          }).toList(),
+          ],
         );
       },
     );
@@ -307,7 +387,8 @@ class _HomePageState extends State<HomePage> {
           return GestureDetector(
             onTap: () => _sendQuickAction(label),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -352,7 +433,6 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Row(
         children: [
-          // Camera button
           GestureDetector(
             onTap: () {
               // TODO: Implement camera / scan feature
@@ -372,7 +452,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(width: 10),
-          // Text field
           Expanded(
             child: Container(
               height: 44,
@@ -401,7 +480,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(width: 8),
-          // Send button
           GestureDetector(
             onTap: _sendMessage,
             child: Container(

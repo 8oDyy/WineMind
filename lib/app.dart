@@ -7,12 +7,14 @@ import 'features/auth/domain/entities/user_entity.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/ai/presentation/bloc/chat_bloc.dart';
+import 'features/ai/presentation/bloc/chat_event.dart' as chat_events;
 import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/wine/presentation/pages/cellar_page.dart';
-import 'features/wine/presentation/pages/home_page.dart';
+import 'features/home/presentation/pages/home_page.dart';
 import 'features/wine/presentation/pages/wines_page.dart';
 import 'injection_container.dart';
 
@@ -60,15 +62,22 @@ class _SplashGateState extends State<SplashGate> {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return const AuthChoicePage();
 
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthAuthenticated) return MainScreen(user: state.user);
-        if (state is AuthUnauthenticated) return const AuthChoicePage();
-        if (state is AuthError) return const AuthChoicePage();
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          context.read<ChatBloc>().add(const chat_events.ResetChatEvent());
+        }
       },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) return MainScreen(user: state.user);
+          if (state is AuthUnauthenticated) return const AuthChoicePage();
+          if (state is AuthError) return const AuthChoicePage();
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
     );
   }
 }

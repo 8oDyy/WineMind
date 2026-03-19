@@ -14,5 +14,5 @@ class ChatMessage extends Equatable {
   }) : timestamp = timestamp ?? DateTime.now();
 
   @override
-  List<Object?> get props => [content, role, timestamp];
+  List<Object?> get props => [content, role];
 }
