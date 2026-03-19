@@ -62,3 +62,10 @@ app.*.map.json
 # Windsurf / Codeium
 .windsurf/
 .codeium/
+
+
+# Generated files
+**/generated_plugin_registrant.dart
+**/generated_plugin_registrant.cc
+**/generated_plugin_registrant.swift
+**/generated_plugins.cmake

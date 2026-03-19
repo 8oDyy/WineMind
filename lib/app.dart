@@ -6,6 +6,7 @@ import 'core/widgets/bottom_nav_bar.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
@@ -55,12 +56,12 @@ class _SplashGateState extends State<SplashGate> {
   @override
   Widget build(BuildContext context) {
     final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) return const LoginPage();
+    if (session == null) return const AuthChoicePage();
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is AuthAuthenticated) return const MainScreen();
-        if (state is AuthUnauthenticated) return const LoginPage();
+        if (state is AuthUnauthenticated) return const AuthChoicePage();
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
