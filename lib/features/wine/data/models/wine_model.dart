@@ -2,6 +2,8 @@ import '../../domain/entities/wine.dart';
 
 class WineModel extends Wine {
   const WineModel({
+    super.id,
+    super.cellarId,
     required super.name,
     required super.year,
     required super.type,
@@ -10,58 +12,137 @@ class WineModel extends Wine {
     required super.points,
     required super.apogee,
     required super.stock,
-    super.classification,
-    super.subRegion,
-    super.alcohol,
-    super.grapes,
+    super.description,
+    super.designation,
+    super.price,
+    super.province,
+    super.country,
+    super.variety,
+    super.winery,
     super.location,
     super.foodPairings,
     super.bodyLevel,
     super.tanninLevel,
     super.fruitLevel,
+    super.imageUrl,
+    super.notes,
+    super.purchaseDate,
+    super.purchasePrice,
   });
 
-  factory WineModel.fromJson(Map<String, dynamic> json) {
+  /// Construit un WineModel depuis une row `user_cellar` avec join `wines`.
+  factory WineModel.fromCellarJson(Map<String, dynamic> json) {
+    final catalog = json['wines'] as Map<String, dynamic>?;
     return WineModel(
-      name: json['name'] as String,
-      year: json['year'] as String,
-      type: json['type'] as String,
-      region: json['region'] as String,
-      rating: (json['rating'] as num).toDouble(),
-      points: json['points'] as int,
-      apogee: json['apogee'] as String,
-      stock: json['stock'] as int,
-      classification: json['classification'] as String?,
-      subRegion: json['subRegion'] as String?,
-      alcohol: json['alcohol'] != null ? (json['alcohol'] as num).toDouble() : null,
-      grapes: (json['grapes'] as List<dynamic>?)?.cast<String>() ?? const [],
+      cellarId: json['id'] as String?,
+      id: json['wine_id'] as String? ?? catalog?['id'] as String?,
+      name: json['custom_name'] as String? ??
+          catalog?['name'] as String? ??
+          'Inconnu',
+      year: json['custom_year'] as String? ??
+          (catalog?['year']?.toString() ?? ''),
+      type: json['custom_type'] as String? ??
+          catalog?['type'] as String? ??
+          'Rouge',
+      region: json['custom_region'] as String? ??
+          catalog?['region'] as String? ??
+          '',
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      points: json['custom_points'] as int? ??
+          catalog?['points'] as int? ??
+          0,
+      apogee: json['apogee'] as String? ?? '',
+      stock: json['stock'] as int? ?? 1,
+      description: json['custom_description'] as String? ??
+          catalog?['description'] as String?,
+      designation: catalog?['designation'] as String?,
+      price: json['custom_price'] != null
+          ? (json['custom_price'] as num).toDouble()
+          : catalog?['price'] != null
+              ? (catalog!['price'] as num).toDouble()
+              : null,
+      province: catalog?['province'] as String?,
+      country: catalog?['country'] as String?,
+      variety: json['custom_variety'] as String? ??
+          catalog?['variety'] as String?,
+      winery: json['custom_winery'] as String? ??
+          catalog?['winery'] as String?,
       location: json['location'] as String?,
-      foodPairings: (json['foodPairings'] as List<dynamic>?)?.cast<String>() ?? const [],
-      bodyLevel: json['bodyLevel'] != null ? (json['bodyLevel'] as num).toDouble() : 0.5,
-      tanninLevel: json['tanninLevel'] != null ? (json['tanninLevel'] as num).toDouble() : 0.5,
-      fruitLevel: json['fruitLevel'] != null ? (json['fruitLevel'] as num).toDouble() : 0.5,
+      foodPairings: (catalog?['food_pairings'] as List<dynamic>?)
+              ?.cast<String>() ??
+          const [],
+      bodyLevel: catalog?['body_level'] != null
+          ? (catalog!['body_level'] as num).toDouble()
+          : 0.5,
+      tanninLevel: catalog?['tannin_level'] != null
+          ? (catalog!['tannin_level'] as num).toDouble()
+          : 0.5,
+      fruitLevel: catalog?['fruit_level'] != null
+          ? (catalog!['fruit_level'] as num).toDouble()
+          : 0.5,
+      imageUrl: catalog?['image_url'] as String?,
+      notes: json['notes'] as String?,
+      purchaseDate: json['purchase_date'] as String?,
+      purchasePrice: json['purchase_price'] != null
+          ? (json['purchase_price'] as num).toDouble()
+          : null,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  /// Construit un WineModel depuis une row du catalogue `wines`.
+  factory WineModel.fromCatalogJson(Map<String, dynamic> json) {
+    return WineModel(
+      id: json['id'] as String?,
+      name: json['name'] as String? ?? 'Inconnu',
+      year: json['year']?.toString() ?? '',
+      type: json['type'] as String? ?? 'Rouge',
+      region: json['region'] as String? ?? '',
+      rating: 0.0,
+      points: json['points'] as int? ?? 0,
+      apogee: '',
+      stock: 0,
+      description: json['description'] as String?,
+      designation: json['designation'] as String?,
+      price: json['price'] != null
+          ? (json['price'] as num).toDouble()
+          : null,
+      province: json['province'] as String?,
+      country: json['country'] as String?,
+      variety: json['variety'] as String?,
+      winery: json['winery'] as String?,
+      foodPairings: (json['food_pairings'] as List<dynamic>?)
+              ?.cast<String>() ??
+          const [],
+      bodyLevel: json['body_level'] != null
+          ? (json['body_level'] as num).toDouble()
+          : 0.5,
+      tanninLevel: json['tannin_level'] != null
+          ? (json['tannin_level'] as num).toDouble()
+          : 0.5,
+      fruitLevel: json['fruit_level'] != null
+          ? (json['fruit_level'] as num).toDouble()
+          : 0.5,
+      imageUrl: json['image_url'] as String?,
+    );
+  }
+
+  /// Sérialise pour INSERT dans user_cellar.
+  Map<String, dynamic> toCellarInsert(String userId) {
     return {
-      'name': name,
-      'year': year,
-      'type': type,
-      'region': region,
-      'rating': rating,
-      'points': points,
-      'apogee': apogee,
+      'user_id': userId,
+      if (id != null) 'wine_id': id,
+      if (id == null) 'custom_name': name,
+      if (id == null) 'custom_year': year,
+      if (id == null) 'custom_type': type,
+      if (id == null) 'custom_region': region,
+      if (id == null) 'custom_points': points,
       'stock': stock,
-      'classification': classification,
-      'subRegion': subRegion,
-      'alcohol': alcohol,
-      'grapes': grapes,
-      'location': location,
-      'foodPairings': foodPairings,
-      'bodyLevel': bodyLevel,
-      'tanninLevel': tanninLevel,
-      'fruitLevel': fruitLevel,
+      'rating': rating,
+      'apogee': apogee,
+      if (notes != null) 'notes': notes,
+      if (location != null) 'location': location,
+      if (purchaseDate != null) 'purchase_date': purchaseDate,
+      if (purchasePrice != null) 'purchase_price': purchasePrice,
     };
   }
 }

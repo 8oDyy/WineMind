@@ -131,7 +131,7 @@ class WineDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (wine.classification != null)
+                  if (wine.designation != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -142,7 +142,7 @@ class WineDetailPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        wine.classification!,
+                        wine.designation!,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -161,10 +161,10 @@ class WineDetailPage extends StatelessWidget {
                       height: 1.2,
                     ),
                   ),
-                  if (wine.subRegion != null) ...[
+                  if (wine.winery != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      wine.subRegion!,
+                      wine.winery!,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
@@ -188,6 +188,10 @@ class WineDetailPage extends StatelessWidget {
         children: [
           _buildTags(wine),
           const SizedBox(height: 16),
+          if (wine.description != null && wine.description!.isNotEmpty) ...[
+            _buildDescriptionCard(wine),
+            const SizedBox(height: 16),
+          ],
           _buildTechnicalCard(wine),
           const SizedBox(height: 16),
           _buildTasteProfile(wine),
@@ -249,6 +253,46 @@ class WineDetailPage extends StatelessWidget {
     );
   }
 
+  Widget _buildDescriptionCard(Wine wine) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'DESCRIPTION',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            wine.description!,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textPrimary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTechnicalCard(Wine wine) {
     return Container(
       decoration: BoxDecoration(
@@ -262,20 +306,42 @@ class WineDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _buildTechColumn(
-              label: 'ALCOOL',
-              value: wine.alcohol != null ? '${wine.alcohol}% vol.' : '-',
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTechColumn(
+                  label: 'CÉPAGE',
+                  value: wine.variety ?? '-',
+                ),
+              ),
+              Container(width: 1, height: 60, color: Colors.grey.shade100),
+              Expanded(
+                child: _buildTechColumn(
+                  label: 'DOMAINE',
+                  value: wine.winery ?? '-',
+                ),
+              ),
+            ],
           ),
-          Container(width: 1, height: 60, color: Colors.grey.shade100),
-          Expanded(
-            child: _buildTechColumn(
-              label: 'CÉPAGES',
-              value: wine.grapes.isNotEmpty ? wine.grapes.join(', ') : '-',
-            ),
+          Divider(height: 1, color: Colors.grey.shade100),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTechColumn(
+                  label: 'PAYS',
+                  value: wine.country ?? '-',
+                ),
+              ),
+              Container(width: 1, height: 60, color: Colors.grey.shade100),
+              Expanded(
+                child: _buildTechColumn(
+                  label: 'PRIX',
+                  value: wine.price != null ? '${wine.price!.toStringAsFixed(0)} €' : '-',
+                ),
+              ),
+            ],
           ),
         ],
       ),

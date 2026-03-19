@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 class Wine extends Equatable {
+  final String? id;
+  final String? cellarId;
   final String name;
   final String year;
   final String type;
@@ -9,17 +11,26 @@ class Wine extends Equatable {
   final int points;
   final String apogee;
   final int stock;
-  final String? classification;
-  final String? subRegion;
-  final double? alcohol;
-  final List<String> grapes;
+  final String? description;
+  final String? designation;
+  final double? price;
+  final String? province;
+  final String? country;
+  final String? variety;
+  final String? winery;
   final String? location;
   final List<String> foodPairings;
   final double bodyLevel;
   final double tanninLevel;
   final double fruitLevel;
+  final String? imageUrl;
+  final String? notes;
+  final String? purchaseDate;
+  final double? purchasePrice;
 
   const Wine({
+    this.id,
+    this.cellarId,
     required this.name,
     required this.year,
     required this.type,
@@ -28,21 +39,28 @@ class Wine extends Equatable {
     required this.points,
     required this.apogee,
     required this.stock,
-    this.classification,
-    this.subRegion,
-    this.alcohol,
-    this.grapes = const [],
+    this.description,
+    this.designation,
+    this.price,
+    this.province,
+    this.country,
+    this.variety,
+    this.winery,
     this.location,
     this.foodPairings = const [],
     this.bodyLevel = 0.5,
     this.tanninLevel = 0.5,
     this.fruitLevel = 0.5,
-  })  : assert(bodyLevel >= 0.0 && bodyLevel <= 1.0, 'bodyLevel must be between 0.0 and 1.0'),
-        assert(tanninLevel >= 0.0 && tanninLevel <= 1.0, 'tanninLevel must be between 0.0 and 1.0'),
-        assert(fruitLevel >= 0.0 && fruitLevel <= 1.0, 'fruitLevel must be between 0.0 and 1.0');
+    this.imageUrl,
+    this.notes,
+    this.purchaseDate,
+    this.purchasePrice,
+  });
 
   @override
   List<Object?> get props => [
+        id,
+        cellarId,
         name,
         year,
         type,
@@ -51,14 +69,21 @@ class Wine extends Equatable {
         points,
         apogee,
         stock,
-        classification,
-        subRegion,
-        alcohol,
-        grapes,
+        description,
+        designation,
+        price,
+        province,
+        country,
+        variety,
+        winery,
         location,
         foodPairings,
         bodyLevel,
         tanninLevel,
         fruitLevel,
+        imageUrl,
+        notes,
+        purchaseDate,
+        purchasePrice,
       ];
 }

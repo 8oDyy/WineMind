@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'core/theme/app_theme.dart';
 import 'core/widgets/bottom_nav_bar.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/presentation/pages/login_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/wine/presentation/pages/cellar_page.dart';
@@ -14,18 +19,41 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WineMind',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => sl<WineBloc>()),
-          BlocProvider(create: (_) => sl<CellarBloc>()),
-        ],
-        child: const MainScreen(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<AuthBloc>()),
+        BlocProvider(create: (_) => sl<WineBloc>()),
+        BlocProvider(create: (_) => sl<CellarBloc>()),
+      ],
+      child: MaterialApp(
+        title: 'WineMind',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const SplashGate(),
       ),
     );
+  }
+}
+
+class SplashGate extends StatelessWidget {
+  const SplashGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      context.read<AuthBloc>().add(const CheckAuthStatusEvent());
+      return BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) return const MainScreen();
+          if (state is AuthUnauthenticated) return const LoginPage();
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      );
+    }
+    return const LoginPage();
   }
 }
 
