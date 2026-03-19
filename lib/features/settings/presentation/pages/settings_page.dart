@@ -77,6 +77,7 @@ class _SettingsBody extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
+              final bloc = context.read<AuthBloc>();
               Navigator.pop(context);
               authBloc.add(const LogoutEvent());
             },
@@ -106,6 +107,7 @@ class _SettingsBody extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
+              final bloc = context.read<AuthBloc>();
               Navigator.pop(context);
               authBloc.add(DeleteAccountEvent(userId: userId));
             },
