@@ -81,12 +81,14 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: MultiBlocListener(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: MultiBlocListener(
                 listeners: [
                   BlocListener<DishPictureBloc, DishPictureState>(
                     listener: (context, state) {
@@ -153,8 +155,9 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            _buildInputBar(),
-          ],
+              _buildInputBar(),
+            ],
+          ),
         ),
       ),
     );
