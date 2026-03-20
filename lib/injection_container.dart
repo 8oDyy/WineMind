@@ -111,7 +111,7 @@ Future<void> init() async {
   sl.registerLazySingleton<AiRemoteDataSource>(
     () => AiRemoteDataSourceImpl(
       client: sl<http.Client>(),
-      baseUrl: 'http://4.233.146.238:8000',
+      baseUrl: 'http://10.74.16.212:8000',
     ),
   );
 
@@ -174,7 +174,7 @@ Future<void> init() async {
   sl.registerLazySingleton<DishAnalysisRemoteDataSource>(
     () => DishAnalysisRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://4.233.146.238:8000',
+      baseUrl: 'http://10.74.16.212:8000',
     ),
   );
 
@@ -187,14 +187,14 @@ Future<void> init() async {
   sl.registerLazySingleton<WineLabelAnalysisRemoteDataSource>(
     () => WineLabelAnalysisRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://4.233.146.238:8000',
+      baseUrl: 'http://10.74.16.212:8000',
     ),
   );
 
   sl.registerLazySingleton<WineLabelAddRemoteDataSource>(
     () => WineLabelAddRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://4.233.146.238:8000',
+      baseUrl: 'http://10.74.16.212:8000',
     ),
   );
 
