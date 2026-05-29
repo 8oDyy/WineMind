@@ -64,6 +64,9 @@ dev_dependencies:
   mockito: ^5.4.4
   build_runner: ^2.4.13
   bloc_test: ^10.0.0
+  
+  # App icon
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
@@ -71,3 +74,15 @@ flutter:
   assets:
     - assets/img/logo-winemind.svg
     - assets/img/Paul_Happy.png
+    - assets/img/paulIdee.png
+    - assets/img/paulIdle.png
+    - assets/img/paulSad.png
+    - assets/img/paulSurprised.png
+    - assets/img/paulThinking.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/img/paulIdee.png"
+  adaptive_icon_background: "#DC143C"
+  adaptive_icon_foreground: "assets/img/paulIdee.png"

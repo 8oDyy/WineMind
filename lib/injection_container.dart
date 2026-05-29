@@ -44,6 +44,21 @@ import 'features/dishpicture/domain/repositories/dish_analysis_repository.dart';
 import 'features/dishpicture/domain/usecases/analyze_dish.dart';
 import 'features/dishpicture/presentation/bloc/dish_analysis_bloc.dart';
 
+// Wine Label
+import 'features/wine_label/data/datasources/wine_label_remote_data_source.dart';
+import 'features/wine_label/data/datasources/wine_label_analysis_remote_data_source.dart';
+import 'features/wine_label/data/datasources/wine_label_add_remote_data_source.dart';
+import 'features/wine_label/data/repositories/wine_label_repository_impl.dart';
+import 'features/wine_label/data/repositories/wine_label_analysis_repository_impl.dart';
+import 'features/wine_label/data/repositories/wine_label_add_repository_impl.dart';
+import 'features/wine_label/domain/repositories/wine_label_repository.dart';
+import 'features/wine_label/domain/repositories/wine_label_analysis_repository.dart';
+import 'features/wine_label/domain/repositories/wine_label_add_repository.dart';
+import 'features/wine_label/domain/usecases/upload_wine_label.dart';
+import 'features/wine_label/domain/usecases/analyze_wine_label.dart';
+import 'features/wine_label/domain/usecases/add_wine_to_cellar.dart';
+import 'features/wine_label/presentation/bloc/wine_label_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -96,7 +111,7 @@ Future<void> init() async {
   sl.registerLazySingleton<AiRemoteDataSource>(
     () => AiRemoteDataSourceImpl(
       client: sl<http.Client>(),
-      baseUrl: 'http://4.233.146.238:8000',
+      baseUrl: 'http://10.74.16.212:8000',
     ),
   );
 
@@ -159,7 +174,68 @@ Future<void> init() async {
   sl.registerLazySingleton<DishAnalysisRemoteDataSource>(
     () => DishAnalysisRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://4.233.146.238:8000',
+      baseUrl: 'http://10.74.16.212:8000',
+    ),
+  );
+
+  // Wine Label Feature
+  // Data sources
+  sl.registerLazySingleton<WineLabelRemoteDataSource>(
+    () => WineLabelRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<WineLabelAnalysisRemoteDataSource>(
+    () => WineLabelAnalysisRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: 'http://10.74.16.212:8000',
+    ),
+  );
+
+  sl.registerLazySingleton<WineLabelAddRemoteDataSource>(
+    () => WineLabelAddRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: 'http://10.74.16.212:8000',
+    ),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<WineLabelRepository>(
+    () => WineLabelRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<WineLabelAnalysisRepository>(
+    () => WineLabelAnalysisRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<WineLabelAddRepository>(
+    () => WineLabelAddRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton<UploadWineLabel>(
+    () => UploadWineLabel(sl()),
+  );
+
+  sl.registerLazySingleton<AnalyzeWineLabel>(
+    () => AnalyzeWineLabel(sl()),
+  );
+
+  sl.registerLazySingleton<AddWineToCellar>(
+    () => AddWineToCellar(sl()),
+  );
+
+  // BLoC
+  sl.registerFactory<WineLabelBloc>(
+    () => WineLabelBloc(
+      uploadWineLabel: sl(),
+      analyzeWineLabel: sl(),
+      addWineToCellar: sl(),
     ),
   );
 }
