@@ -54,17 +54,40 @@ class SplashGate extends StatefulWidget {
 }
 
 class _SplashGateState extends State<SplashGate> {
+  bool _initializing = true;
+
   @override
   void initState() {
     super.initState();
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      context.read<AuthBloc>().add(const CheckAuthStatusEvent());
+    _initSession();
+  }
+
+  Future<void> _initSession() async {
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        // Try to refresh the session to ensure it's still valid
+        await Supabase.instance.client.auth.refreshSession();
+        if (mounted) {
+          context.read<AuthBloc>().add(const CheckAuthStatusEvent());
+        }
+      }
+    } catch (_) {
+      // Session expired or corrupted — sign out cleanly
+      await Supabase.instance.client.auth.signOut();
+    } finally {
+      if (mounted) setState(() => _initializing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_initializing) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return const AuthChoicePage();
 
