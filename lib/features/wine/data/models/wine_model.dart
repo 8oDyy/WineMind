@@ -126,6 +126,25 @@ class WineModel extends Wine {
     );
   }
 
+  /// Corps JSON pour POST /api/cellar (l'user_id est déduit du JWT côté serveur).
+  Map<String, dynamic> toCellarApiJson() {
+    return {
+      if (id != null) 'wine_id': id,
+      if (id == null) 'custom_name': name,
+      if (id == null) 'custom_year': year,
+      if (id == null) 'custom_type': type,
+      if (id == null) 'custom_region': region,
+      if (id == null) 'custom_points': points,
+      'stock': stock,
+      'rating': rating,
+      'apogee': apogee,
+      if (notes != null) 'notes': notes,
+      if (location != null) 'location': location,
+      if (purchaseDate != null) 'purchase_date': purchaseDate,
+      if (purchasePrice != null) 'purchase_price': purchasePrice,
+    };
+  }
+
   /// Sérialise pour INSERT dans user_cellar.
   Map<String, dynamic> toCellarInsert(String userId) {
     return {

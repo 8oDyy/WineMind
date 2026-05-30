@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../../../core/config/app_config.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/chat_message.dart';
 
@@ -13,7 +14,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDataSource {
 
   AiRemoteDataSourceImpl({
     required this.client,
-    this.baseUrl = 'http://4.233.146.238:8000',
+    this.baseUrl = AppConfig.apiBaseUrl,
   });
 
   @override

@@ -2,6 +2,8 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/config/app_config.dart';
+
 // Auth
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
@@ -93,7 +95,11 @@ Future<void> init() async {
   );
   // Data source
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(sl()),
+    () => AuthRemoteDataSourceImpl(
+      supabase: sl<SupabaseClient>(),
+      httpClient: sl<http.Client>(),
+      baseUrl: AppConfig.apiBaseUrl,
+    ),
   );
 
   // ── AI ──
@@ -111,7 +117,7 @@ Future<void> init() async {
   sl.registerLazySingleton<AiRemoteDataSource>(
     () => AiRemoteDataSourceImpl(
       client: sl<http.Client>(),
-      baseUrl: 'http://10.74.16.212:8000',
+      baseUrl: AppConfig.apiBaseUrl,
     ),
   );
 
@@ -140,7 +146,11 @@ Future<void> init() async {
   );
   // Data source
   sl.registerLazySingleton<WineRemoteDataSource>(
-    () => WineRemoteDataSourceImpl(sl()),
+    () => WineRemoteDataSourceImpl(
+      client: sl<http.Client>(),
+      baseUrl: AppConfig.apiBaseUrl,
+      supabase: sl<SupabaseClient>(),
+    ),
   );
 
   // ── DishPicture ──
@@ -174,7 +184,7 @@ Future<void> init() async {
   sl.registerLazySingleton<DishAnalysisRemoteDataSource>(
     () => DishAnalysisRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://10.74.16.212:8000',
+      baseUrl: AppConfig.apiBaseUrl,
     ),
   );
 
@@ -187,14 +197,14 @@ Future<void> init() async {
   sl.registerLazySingleton<WineLabelAnalysisRemoteDataSource>(
     () => WineLabelAnalysisRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://10.74.16.212:8000',
+      baseUrl: AppConfig.apiBaseUrl,
     ),
   );
 
   sl.registerLazySingleton<WineLabelAddRemoteDataSource>(
     () => WineLabelAddRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://10.74.16.212:8000',
+      baseUrl: AppConfig.apiBaseUrl,
     ),
   );
 

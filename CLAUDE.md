@@ -59,6 +59,18 @@ L'app parle à **deux** backends :
 
 1. **Supabase** — auth et données vin. URL + `anonKey` en dur dans `main.dart`, client exposé via get_it (`SupabaseClient`).
 2. **API HTTP** (FastAPI, IA + analyse d'images : chat, étiquettes, plats) — **`baseUrl` codé en dur** dans `lib/injection_container.dart` (chat IA, wine_label, dishpicture) et comme défaut dans `lib/features/ai/data/datasources/ai_remote_data_source.dart`.
+   - **Prod** : `https://winemind.fr` (health `/health`, doc `/docs`). Le `baseUrl` est centralisé dans `lib/core/config/app_config.dart` (`AppConfig.apiBaseUrl`) — **source de vérité unique**, ne plus jamais coder d'IP/URL en dur ailleurs.
    - **Code source du backend** (repo séparé, hors de ce projet Flutter) : `/Users/boulicaut/PycharmProjects/Wind-Mind_back` (FastAPI, `app/main.py`, Docker). À consulter pour connaître les endpoints, leurs payloads/réponses, ou diagnostiquer une erreur côté API.
+
+### État du routage API
+
+- **Via l'API** : chat (`POST /chat`), analyse plat (`POST /api/wine-pairing`), analyse étiquette (`POST /api/wine-label-analysis`), ajout via étiquette (`POST /api/wine-label-add`), **CRUD cave** (`GET/POST /api/cellar`, `GET /api/cellar/last`, `DELETE /api/cellar/{id}`, `PATCH /api/cellar/{id}/stock`) et **profil** (`PATCH /api/profile`, `DELETE /api/account`).
+- **Auth des appels données** : les datasources `wine`/`auth` envoient le **JWT Supabase** dans le header `Authorization: Bearer <accessToken>` (récupéré via `supabase.auth.currentSession?.accessToken`). Le backend déduit l'`user_id` du token — ne jamais passer d'`user_id` dans le body pour ces endpoints. La spec backend de référence est `docs/backend-spec-cave-profil.md`.
+- **Reste légitimement côté client (Supabase direct)** : Supabase Auth uniquement — `register`/`login`/`logout`/`getCurrentUser` dans `auth_remote_data_source.dart`, et le refresh de session dans `app.dart`.
+- ⚠️ **Dette connue** : les endpoints `wine-label-*` prennent encore le `user_id` dans le body et ne vérifient pas le JWT (pré-datent la migration) — à aligner sur le modèle JWT plus tard. Les uploads d'images (`wine_label`, `dishpicture`) écrivent toujours en direct dans Supabase Storage + table de métadonnées (hors périmètre de la migration cave/profil).
+
+### Tests
+
+⚠️ `test/wine_detail_page_test.dart` est **cassé et pré-existant** : il référence des champs d'entité `Wine` qui n'existent plus (`subRegion`, `classification`, `alcohol`, `grapes`) et un fake `WineRepository` incomplet. Tant qu'il n'est pas corrigé, `flutter test` ne compile pas. À réparer ou retirer indépendamment.
 
 ⚠️ L'API vient d'être déployée mais les `baseUrl` pointent encore vers des **IP de réseau local** (ex. `http://10.74.16.212:8000`) qui changent. En cas d'erreur réseau sur le chat / l'analyse, **vérifier et mettre à jour ces `baseUrl`** (chercher `baseUrl:` dans `injection_container.dart`). À terme, centraliser dans une config plutôt que de les dupliquer.
