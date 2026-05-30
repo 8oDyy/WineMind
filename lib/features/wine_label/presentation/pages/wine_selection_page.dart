@@ -91,24 +91,29 @@ class _WineSelectionPageState extends State<WineSelectionPage> {
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
-                    
-                    // Existing wine proposal
-                    WineProposalCard(
-                      title: 'Option 1 - Vin existant',
-                      proposal: widget.analysisResult.existingProposal,
-                      isSelected: selectedWineId == widget.analysisResult.existingProposal.id && isExistingWine,
-                      onTap: () {
-                        final existingId = widget.analysisResult.existingProposal.id;
-                        if (existingId != null) {
-                          setState(() {
-                            selectedWineId = existingId;
-                            isExistingWine = true;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    
+
+                    // Existing wine proposal (uniquement si le catalogue a une correspondance)
+                    if (widget.analysisResult.existingProposal != null) ...[
+                      WineProposalCard(
+                        title: 'Option 1 - Vin existant',
+                        proposal: widget.analysisResult.existingProposal!,
+                        isSelected: selectedWineId ==
+                                widget.analysisResult.existingProposal!.id &&
+                            isExistingWine,
+                        onTap: () {
+                          final existingId =
+                              widget.analysisResult.existingProposal!.id;
+                          if (existingId != null) {
+                            setState(() {
+                              selectedWineId = existingId;
+                              isExistingWine = true;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // New wine proposal
                     WineProposalCard(
                       title: 'Option 2 - Nouveau vin',
