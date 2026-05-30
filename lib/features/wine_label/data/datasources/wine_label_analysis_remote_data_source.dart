@@ -51,9 +51,15 @@ class WineLabelAnalysisRemoteDataSourceImpl implements WineLabelAnalysisRemoteDa
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
 
+        // existing_proposal peut être null si le catalogue n'a aucune correspondance.
+        final existingJson =
+            jsonResponse['existing_proposal'] as Map<String, dynamic>?;
+
         return WineAnalysisResult(
           chatResponse: jsonResponse['chat_response'] as String,
-          existingProposal: WineProposalMapper.fromJson(jsonResponse['existing_proposal'] as Map<String, dynamic>),
+          existingProposal: existingJson != null
+              ? WineProposalMapper.fromJson(existingJson)
+              : null,
           newProposal: WineProposalMapper.fromJson(jsonResponse['new_proposal'] as Map<String, dynamic>),
           wineAnalysis: WineProposalMapper.fromJson(jsonResponse['wine_analysis'] as Map<String, dynamic>),
         );

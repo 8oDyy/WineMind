@@ -3,7 +3,9 @@ import 'wine_proposal.dart';
 
 class WineAnalysisResult extends Equatable {
   final String chatResponse;
-  final WineProposal existingProposal;
+
+  /// Proposition issue du catalogue existant, ou `null` si aucune correspondance.
+  final WineProposal? existingProposal;
   final WineProposal newProposal;
   final WineProposal wineAnalysis;
 
