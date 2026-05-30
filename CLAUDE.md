@@ -10,6 +10,8 @@ WineMind est une application **Flutter** (cave à vin + assistant IA) ciblant **
 - **Paralléliser au maximum** : lancer les sous-agents indépendants **dans un seul message** (plusieurs appels `Agent`) pour qu'ils tournent en même temps.
 - **Toujours utiliser le modèle `sonnet`** pour les sous-agents (`model: "sonnet"`).
 - **Toute remarque pertinente DOIT être ajoutée à ce `CLAUDE.md`** (décision d'archi, piège récurrent, convention, info backend, etc.) — c'est la mémoire partagée du projet.
+- **Vérification après chaque grande modification de code** : l'orchestrateur lance l'agent `app-tester` (`.claude/agents/app-tester.md`, Sonnet) pour confirmer que l'app marche toujours (analyse + tests + build iOS + smoke-test simulateur) et remonter les régressions. Cet agent **diagnostique et rapporte, ne corrige pas** — l'orchestrateur décide des suites. « Grande modification » = touche à un datasource/repository/bloc/usecase, ajout/refactor de feature, changement du DI (`injection_container.dart`) ou de la navigation. Inutile pour de la doc, un commentaire, un renommage trivial.
+- **Travail front-end / UI délégué** : dès qu'une tâche concerne l'interface (écran/page, widget, layout, navigation/routing, thème/styles, animations, widget tests), l'orchestrateur la délègue à l'agent `flutter-frontend` (`.claude/agents/flutter-frontend.md`, Sonnet), qui s'appuie sur les skills `flutter-*` et `frontend-design` et respecte la Clean Architecture + BLoC (UI dans `presentation/` uniquement, jamais d'accès données dans les widgets).
 
 ## Commandes
 

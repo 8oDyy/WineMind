@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ios-simulator-skill": {
+      "source": "conorluddy/ios-simulator-skill",
+      "sourceType": "github",
+      "skillPath": "ios-simulator-skill/skills/ios-simulator-skill/SKILL.md",
+      "computedHash": "e94d9f50395793aeec0390da65123728fbea75c4108e12ccda7e12ac775251c0"
+    }
+  }
+}
