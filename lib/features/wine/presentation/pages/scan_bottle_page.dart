@@ -21,8 +21,9 @@ class ScanBottlePage extends StatelessWidget {
       
       if (image != null && context.mounted) {
         final bytes = await image.readAsBytes();
+        if (!context.mounted) return;
         final authState = context.read<AuthBloc>().state;
-        
+
         if (authState is AuthAuthenticated) {
           // Trigger upload BEFORE navigation
           context.read<WineLabelBloc>().add(
@@ -32,7 +33,7 @@ class ScanBottlePage extends StatelessWidget {
               fileBytes: bytes,
             ),
           );
-          
+
           // Then navigate to analyzing page
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -57,11 +58,12 @@ class ScanBottlePage extends StatelessWidget {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      
+
       if (image != null && context.mounted) {
         final bytes = await image.readAsBytes();
+        if (!context.mounted) return;
         final authState = context.read<AuthBloc>().state;
-        
+
         if (authState is AuthAuthenticated) {
           // Trigger upload BEFORE navigation
           context.read<WineLabelBloc>().add(
@@ -71,7 +73,7 @@ class ScanBottlePage extends StatelessWidget {
               fileBytes: bytes,
             ),
           );
-          
+
           // Then navigate to analyzing page
           Navigator.of(context).push(
             MaterialPageRoute(

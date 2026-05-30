@@ -53,7 +53,6 @@ class AddWineRequestDto {
     if (wineId != null) {
       // Existing wine
       return {
-        'user_id': userId,
         'wine_id': wineId,
         'stock': stock,
         'custom_notes': notes,
@@ -62,7 +61,6 @@ class AddWineRequestDto {
     } else {
       // New wine
       return {
-        'user_id': userId,
         'wine_data': wineData,
         'stock': stock,
         'custom_notes': notes,

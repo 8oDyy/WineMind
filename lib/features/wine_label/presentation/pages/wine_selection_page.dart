@@ -49,7 +49,7 @@ class _WineSelectionPageState extends State<WineSelectionPage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.red.withOpacity(0.3),
+                        color: Colors.red.withValues(alpha: 0.3),
                         width: 2,
                       ),
                     ),
