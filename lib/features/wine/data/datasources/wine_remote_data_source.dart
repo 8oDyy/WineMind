@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/wine_model.dart';
@@ -20,28 +22,45 @@ abstract class WineRemoteDataSource {
 }
 
 class WineRemoteDataSourceImpl implements WineRemoteDataSource {
-  final SupabaseClient _client;
+  final http.Client client;
+  final String baseUrl;
+  final SupabaseClient supabase;
 
-  WineRemoteDataSourceImpl(this._client);
+  WineRemoteDataSourceImpl({
+    required this.client,
+    required this.baseUrl,
+    required this.supabase,
+  });
 
-  String get _userId {
-    final user = _client.auth.currentUser;
-    if (user == null) throw ServerException();
-    return user.id;
+  Map<String, String> get _headers {
+    final token = supabase.auth.currentSession?.accessToken;
+    if (token == null) throw const ServerException();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
   }
 
   @override
   Future<List<WineModel>> getUserCellar() async {
     try {
-      final response = await _client
-          .from('user_cellar')
-          .select('*, wines(*)')
-          .eq('user_id', _userId)
-          .order('created_at', ascending: false);
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/api/cellar'),
+            headers: _headers,
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
 
-      return (response as List)
-          .map((json) => WineModel.fromCellarJson(json as Map<String, dynamic>))
-          .toList();
+      if (response.statusCode == 200) {
+        return (jsonDecode(response.body) as List)
+            .map((e) => WineModel.fromCellarJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw const ServerException();
+      }
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException(e.toString());
@@ -51,16 +70,25 @@ class WineRemoteDataSourceImpl implements WineRemoteDataSource {
   @override
   Future<WineModel?> getLastCellarWine() async {
     try {
-      final response = await _client
-          .from('user_cellar')
-          .select('*, wines(*)')
-          .eq('user_id', _userId)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/api/cellar/last'),
+            headers: _headers,
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
 
-      if (response == null) return null;
-      return WineModel.fromCellarJson(response);
+      if (response.statusCode == 200) {
+        return WineModel.fromCellarJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
+      } else if (response.statusCode == 404) {
+        return null;
+      } else {
+        throw const ServerException();
+      }
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException(e.toString());
@@ -70,10 +98,22 @@ class WineRemoteDataSourceImpl implements WineRemoteDataSource {
   @override
   Future<void> addToCellar(WineModel wine) async {
     try {
-      await _client
-          .from('user_cellar')
-          .insert(wine.toCellarInsert(_userId));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/api/cellar'),
+            headers: _headers,
+            body: jsonEncode(wine.toCellarApiJson()),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw const ServerException();
+      }
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException(e.toString());
     }
   }
@@ -81,12 +121,21 @@ class WineRemoteDataSourceImpl implements WineRemoteDataSource {
   @override
   Future<void> removeFromCellar(String cellarId) async {
     try {
-      await _client
-          .from('user_cellar')
-          .delete()
-          .eq('id', cellarId)
-          .eq('user_id', _userId);
+      final response = await client
+          .delete(
+            Uri.parse('$baseUrl/api/cellar/$cellarId'),
+            headers: _headers,
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw const ServerException();
+      }
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException(e.toString());
     }
   }
@@ -94,12 +143,22 @@ class WineRemoteDataSourceImpl implements WineRemoteDataSource {
   @override
   Future<void> updateCellarStock(String cellarId, int stock) async {
     try {
-      await _client
-          .from('user_cellar')
-          .update({'stock': stock})
-          .eq('id', cellarId)
-          .eq('user_id', _userId);
+      final response = await client
+          .patch(
+            Uri.parse('$baseUrl/api/cellar/$cellarId/stock'),
+            headers: _headers,
+            body: jsonEncode({'stock': stock}),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw const ServerException();
+      }
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException(e.toString());
     }
   }

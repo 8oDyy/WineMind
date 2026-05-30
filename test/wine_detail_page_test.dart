@@ -9,19 +9,26 @@ import 'package:winemind/features/wine/domain/usecases/update_wine_stock.dart';
 import 'package:winemind/features/wine/presentation/bloc/wine_detail_bloc.dart';
 import 'package:winemind/features/wine/presentation/pages/wine_detail_page.dart';
 
+// tWine uses only real Wine fields.
+// - cellarId is required for stock +/- (the page guards on cellarId != null).
+// - designation replaces old 'classification' (shown as green badge in header).
+// - variety replaces old 'grapes' (shown in CÉPAGE technical card cell).
+// - winery is shown as a subtitle in the header and in the DOMAINE technical cell.
+// - subRegion, classification, alcohol, grapes no longer exist in Wine.
 const tWine = Wine(
+  id: 'wine-1',
+  cellarId: 'cellar-1',
   name: 'Château Margaux',
   year: '2015',
   type: 'Rouge',
   region: 'Bordeaux, France',
-  subRegion: 'Margaux, Bordeaux',
   rating: 3.5,
   points: 95,
   apogee: '2025 - 2045',
   stock: 3,
-  classification: 'PREMIER GRAND CRU CLASSÉ',
-  alcohol: 13.5,
-  grapes: ['Cab. Sauv', 'Merlot', 'Petit Verdot'],
+  designation: 'PREMIER GRAND CRU CLASSÉ',
+  variety: 'Cab. Sauv, Merlot, Petit Verdot',
+  winery: 'Château Margaux',
   location: 'Casier A-12',
   foodPairings: ['Viandes', 'Gibier', 'Fromage'],
   bodyLevel: 0.85,
@@ -29,6 +36,7 @@ const tWine = Wine(
   fruitLevel: 0.70,
 );
 
+// Minimal wine: no optional fields, no cellarId (stock buttons do nothing).
 const tWineMinimal = Wine(
   name: 'Domaine Ott',
   year: '2021',
@@ -40,6 +48,12 @@ const tWineMinimal = Wine(
   stock: 5,
 );
 
+// FakeWineRepository implements the CURRENT WineRepository interface:
+//   getLastWine, getAllWines, addToCellar, removeFromCellar, updateCellarStock.
+//
+// UpdateWineStock usecase calls repository.updateCellarStock(cellarId, newStock).
+// We return Right(null) for valid cellarIds so the bloc emits WineDetailLoaded
+// with the updated stock.
 class FakeWineRepository implements WineRepository {
   final Map<String, int> _stocks = {};
 
@@ -47,33 +61,22 @@ class FakeWineRepository implements WineRepository {
   Future<Either<Failure, Wine>> getLastWine() async => const Right(tWine);
 
   @override
-  Future<Either<Failure, List<Wine>>> getAllWines() async => const Right([tWine]);
+  Future<Either<Failure, List<Wine>>> getAllWines() async =>
+      const Right([tWine]);
 
   @override
-  Future<Either<Failure, Wine>> updateWineStock(String wineName, int newStock) async {
-    _stocks[wineName] = newStock;
-    if (wineName == tWine.name) {
-      return Right(Wine(
-        name: tWine.name,
-        year: tWine.year,
-        type: tWine.type,
-        region: tWine.region,
-        subRegion: tWine.subRegion,
-        rating: tWine.rating,
-        points: tWine.points,
-        apogee: tWine.apogee,
-        stock: newStock,
-        classification: tWine.classification,
-        alcohol: tWine.alcohol,
-        grapes: tWine.grapes,
-        location: tWine.location,
-        foodPairings: tWine.foodPairings,
-        bodyLevel: tWine.bodyLevel,
-        tanninLevel: tWine.tanninLevel,
-        fruitLevel: tWine.fruitLevel,
-      ));
-    }
-    return Left(CacheFailure());
+  Future<Either<Failure, void>> addToCellar(Wine wine) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> removeFromCellar(String cellarId) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateCellarStock(
+      String cellarId, int stock) async {
+    _stocks[cellarId] = stock;
+    return const Right(null);
   }
 }
 
@@ -90,6 +93,9 @@ Widget _buildSubject(Wine wine) {
 
 void main() {
   group('WineDetailPage', () {
+    // ─────────────────────────────────────────────
+    // HEADER
+    // ─────────────────────────────────────────────
     group('Header', () {
       testWidgets('affiche le nom et l\'année du vin', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
@@ -98,26 +104,33 @@ void main() {
         expect(find.textContaining('2015'), findsWidgets);
       });
 
-      testWidgets('affiche la classification quand présente', (tester) async {
+      // designation replaces old 'classification': shown as a green badge in
+      // the FlexibleSpaceBar area when non-null.
+      testWidgets('affiche la désignation (badge) quand présente',
+          (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
 
         expect(find.text('PREMIER GRAND CRU CLASSÉ'), findsOneWidget);
       });
 
-      testWidgets('n\'affiche pas la classification quand absente',
-          (tester) async {
+      testWidgets('n\'affiche pas la désignation quand absente', (tester) async {
         await tester.pumpWidget(_buildSubject(tWineMinimal));
 
         expect(find.text('PREMIER GRAND CRU CLASSÉ'), findsNothing);
       });
 
-      testWidgets('affiche la sous-région quand présente', (tester) async {
+      // winery is displayed as a subtitle line below the name/year.
+      testWidgets('affiche le domaine (winery) quand présent', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
 
-        expect(find.text('Margaux, Bordeaux'), findsOneWidget);
+        // winery appears at least once (header subtitle + DOMAINE cell)
+        expect(find.textContaining('Château Margaux'), findsWidgets);
       });
     });
 
+    // ─────────────────────────────────────────────
+    // TAGS
+    // ─────────────────────────────────────────────
     group('Tags', () {
       testWidgets('affiche le tag région', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
@@ -132,26 +145,31 @@ void main() {
       });
     });
 
+    // ─────────────────────────────────────────────
+    // CARTE TECHNIQUE
+    // The technical card now shows: CÉPAGE (variety), DOMAINE (winery),
+    // PAYS (country), PRIX (price).
+    // Old fields 'alcohol' and 'grapes' no longer exist.
+    // ─────────────────────────────────────────────
     group('Carte technique', () {
-      testWidgets('affiche le taux d\'alcool', (tester) async {
-        await tester.pumpWidget(_buildSubject(tWine));
-
-        expect(find.text('13.5% vol.'), findsOneWidget);
-      });
-
-      testWidgets('affiche les cépages', (tester) async {
+      testWidgets('affiche le cépage (variety)', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
 
         expect(find.text('Cab. Sauv, Merlot, Petit Verdot'), findsOneWidget);
       });
 
-      testWidgets('affiche "-" quand pas d\'alcool', (tester) async {
+      testWidgets('affiche "-" pour les champs absents (minimal wine)',
+          (tester) async {
         await tester.pumpWidget(_buildSubject(tWineMinimal));
 
+        // variety, winery, country, price are all null → each cell shows '-'
         expect(find.text('-'), findsWidgets);
       });
     });
 
+    // ─────────────────────────────────────────────
+    // PROFIL GUSTATIF
+    // ─────────────────────────────────────────────
     group('Profil gustatif', () {
       testWidgets('affiche les labels Corps, Tanins, Fruit', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
@@ -168,6 +186,9 @@ void main() {
       });
     });
 
+    // ─────────────────────────────────────────────
+    // ACCORDS METS
+    // ─────────────────────────────────────────────
     group('Accords mets', () {
       testWidgets('affiche les labels des accords mets', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
@@ -185,6 +206,11 @@ void main() {
       });
     });
 
+    // ─────────────────────────────────────────────
+    // GESTION DU STOCK
+    // Stock +/- works only when wine.cellarId != null (page guard).
+    // tWine has cellarId = 'cellar-1'; tWineMinimal has none.
+    // ─────────────────────────────────────────────
     group('Gestion du stock', () {
       testWidgets('affiche le stock initial', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
@@ -232,7 +258,9 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
+        // cellarId set so the guard passes; stock starts at 0.
         const wineNoStock = Wine(
+          cellarId: 'cellar-zero',
           name: 'Test',
           year: '2020',
           type: 'Rouge',
@@ -251,6 +279,9 @@ void main() {
       });
     });
 
+    // ─────────────────────────────────────────────
+    // BOUTONS D'ACTION
+    // ─────────────────────────────────────────────
     group('Boutons d\'action', () {
       testWidgets('affiche le bouton "Ouvrir une bouteille"', (tester) async {
         await tester.pumpWidget(_buildSubject(tWine));
@@ -275,6 +306,9 @@ void main() {
       });
     });
 
+    // ─────────────────────────────────────────────
+    // NAVIGATION
+    // ─────────────────────────────────────────────
     group('Navigation', () {
       testWidgets('le bouton retour pop la page', (tester) async {
         final repo = FakeWineRepository();
