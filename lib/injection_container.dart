@@ -198,6 +198,7 @@ Future<void> init() async {
     () => WineLabelAnalysisRemoteDataSourceImpl(
       client: sl(),
       baseUrl: AppConfig.apiBaseUrl,
+      supabase: sl<SupabaseClient>(),
     ),
   );
 
@@ -205,6 +206,7 @@ Future<void> init() async {
     () => WineLabelAddRemoteDataSourceImpl(
       client: sl(),
       baseUrl: AppConfig.apiBaseUrl,
+      supabase: sl<SupabaseClient>(),
     ),
   );
 

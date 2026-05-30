@@ -65,9 +65,10 @@ L'app parle à **deux** backends :
 ### État du routage API
 
 - **Via l'API** : chat (`POST /chat`), analyse plat (`POST /api/wine-pairing`), analyse étiquette (`POST /api/wine-label-analysis`), ajout via étiquette (`POST /api/wine-label-add`), **CRUD cave** (`GET/POST /api/cellar`, `GET /api/cellar/last`, `DELETE /api/cellar/{id}`, `PATCH /api/cellar/{id}/stock`) et **profil** (`PATCH /api/profile`, `DELETE /api/account`).
-- **Auth des appels données** : les datasources `wine`/`auth` envoient le **JWT Supabase** dans le header `Authorization: Bearer <accessToken>` (récupéré via `supabase.auth.currentSession?.accessToken`). Le backend déduit l'`user_id` du token — ne jamais passer d'`user_id` dans le body pour ces endpoints. La spec backend de référence est `docs/backend-spec-cave-profil.md`.
+- **Endpoints JWT** : cave, profil, **et `wine-label-analysis`/`wine-label-add`** envoient le **JWT Supabase** dans le header `Authorization: Bearer <accessToken>` (via `supabase.auth.currentSession?.accessToken`). Le backend déduit l'`user_id` du token — **ne jamais passer d'`user_id` dans le body**. La spec backend de référence est `docs/backend-spec-cave-profil.md`.
+- **Endpoints publics (sans JWT)** : `POST /chat` (ai) et `POST /api/wine-pairing` (analyse plat).
 - **Reste légitimement côté client (Supabase direct)** : Supabase Auth uniquement — `register`/`login`/`logout`/`getCurrentUser` dans `auth_remote_data_source.dart`, et le refresh de session dans `app.dart`.
-- ⚠️ **Dette connue** : les endpoints `wine-label-*` prennent encore le `user_id` dans le body et ne vérifient pas le JWT (pré-datent la migration) — à aligner sur le modèle JWT plus tard. Les uploads d'images (`wine_label`, `dishpicture`) écrivent toujours en direct dans Supabase Storage + table de métadonnées (hors périmètre de la migration cave/profil).
+- ⚠️ **Hors périmètre / à surveiller** : les uploads d'images (`wine_label`, `dishpicture`) écrivent toujours en direct dans Supabase Storage + table de métadonnées. Bug latent connu : dans `wine_label_analysis_remote_data_source.dart`, `existing_proposal` est casté en `Map` non-nullable alors que le backend peut renvoyer `null` (aucune correspondance catalogue) → crash potentiel, à corriger.
 
 ### Tests
 
