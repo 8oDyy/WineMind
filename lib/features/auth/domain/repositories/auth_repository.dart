@@ -20,11 +20,12 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> logout();
 
-  Future<Either<Failure, void>> updateProfile({
-    required String userId,
+  Future<Either<Failure, UserEntity>> updateProfile({
     String? niveau,
     String? preference,
     String? objectif,
+    String? prenom,
+    String? nom,
   });
 
   Future<Either<Failure, void>> deleteAccount({required String userId});

@@ -7,6 +7,7 @@ import '../../domain/usecases/login_user.dart';
 import '../../domain/usecases/logout_user.dart';
 import '../../domain/usecases/register_user.dart';
 import '../../domain/usecases/sign_in_with_google.dart';
+import '../../domain/usecases/update_profile.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -17,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUser getCurrentUser;
   final DeleteAccount deleteAccount;
   final SignInWithGoogle signInWithGoogle;
+  final UpdateProfile updateProfile;
 
   AuthBloc({
     required this.loginUser,
@@ -25,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.getCurrentUser,
     required this.deleteAccount,
     required this.signInWithGoogle,
+    required this.updateProfile,
   }) : super(const AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<LoginWithEmailPasswordEvent>(_onLoginWithEmailPassword);
@@ -32,6 +35,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginWithGoogleEvent>(_onLoginWithGoogle);
     on<LogoutEvent>(_onLogout);
     on<DeleteAccountEvent>(_onDeleteAccount);
+    on<UpdateProfileEvent>(_onUpdateProfile);
   }
 
   Future<void> _onCheckAuthStatus(
@@ -121,6 +125,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthError(message: _mapFailure(failure))),
       (_) => emit(const AuthUnauthenticated()),
+    );
+  }
+
+  Future<void> _onUpdateProfile(
+    UpdateProfileEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    // On ne tente l'édition que si l'utilisateur est authentifié : on conserve
+    // l'utilisateur courant tout au long du flux pour ne pas casser le routage.
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+    final currentUser = current.user;
+
+    emit(AuthProfileUpdateInProgress(user: currentUser));
+
+    final result = await updateProfile(UpdateProfileParams(
+      niveau: event.niveau,
+      preference: event.preference,
+      objectif: event.objectif,
+      prenom: event.prenom,
+      nom: event.nom,
+    ));
+
+    result.fold(
+      (failure) => emit(AuthProfileUpdateFailure(
+        user: currentUser,
+        message: _mapFailure(failure),
+      )),
+      (user) => emit(AuthProfileUpdateSuccess(user: user)),
     );
   }
 

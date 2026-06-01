@@ -80,20 +80,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateProfile({
-    required String userId,
+  Future<Either<Failure, UserEntity>> updateProfile({
     String? niveau,
     String? preference,
     String? objectif,
+    String? prenom,
+    String? nom,
   }) async {
     try {
-      await remoteDataSource.updateProfile(
-        userId: userId,
+      final user = await remoteDataSource.updateProfile(
         niveau: niveau,
         preference: preference,
         objectif: objectif,
+        prenom: prenom,
+        nom: nom,
       );
-      return const Right(null);
+      return Right(user);
     } catch (e) {
       return Left(AuthFailure(e.toString()));
     }

@@ -5,8 +5,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import 'edit_profile_page.dart';
 
 class SettingsPage extends StatelessWidget {
+  /// Utilisateur initial (repli). L'affichage suit ensuite l'[AuthBloc] pour
+  /// refléter immédiatement les éditions de profil.
   final UserEntity user;
 
   const SettingsPage({super.key, required this.user});
@@ -26,7 +30,16 @@ class SettingsPage extends StatelessWidget {
         backgroundColor: AppColors.primaryWine,
         elevation: 0,
       ),
-      body: _SettingsBody(user: user),
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          // On reste sur le dernier utilisateur authentifié connu ; le repli
+          // `widget.user` couvre l'instant où le bloc n'expose pas encore d'état
+          // authentifié.
+          final currentUser =
+              state is AuthAuthenticated ? state.user : user;
+          return _SettingsBody(user: currentUser);
+        },
+      ),
     );
   }
 }
@@ -262,13 +275,42 @@ class _ProfileBottomSheet extends StatelessWidget {
           _InfoRow(
             icon: Icons.wine_bar_outlined,
             label: 'Préférence',
-            value: user.preference ?? 'Non renseignée',
+            value: (user.preference != null && user.preference!.trim().isNotEmpty)
+                ? user.preference!
+                : 'Non renseignée',
           ),
           const Divider(height: 1),
           _InfoRow(
             icon: Icons.flag_outlined,
             label: 'Objectif',
             value: user.objectif ?? 'Non renseigné',
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context); // ferme le bottom sheet
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EditProfilePage(user: user),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryWine,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              label: const Text(
+                'Modifier mon profil',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
           const SizedBox(height: 8),
         ],
