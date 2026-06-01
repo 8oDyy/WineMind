@@ -24,11 +24,16 @@ abstract class AuthRemoteDataSource {
 
   Future<void> logout();
 
-  Future<void> updateProfile({
-    required String userId,
+  /// Met à jour le profil via `PATCH /api/profile` (JWT).
+  /// Seuls les champs non-null sont envoyés. Le backend renvoie le row
+  /// `profiles` complet, parsé en [UserModel] (source de vérité fiable —
+  /// contrairement à `getCurrentUser` qui lit les `user_metadata` auth).
+  Future<UserModel> updateProfile({
     String? niveau,
     String? preference,
     String? objectif,
+    String? prenom,
+    String? nom,
   });
 
   Future<void> deleteAccount({required String userId});
@@ -181,18 +186,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> updateProfile({
-    required String userId,
+  Future<UserModel> updateProfile({
     String? niveau,
     String? preference,
     String? objectif,
+    String? prenom,
+    String? nom,
   }) async {
     final updates = <String, dynamic>{};
     if (niveau != null) updates['niveau'] = niveau;
     if (preference != null) updates['preference'] = preference;
     if (objectif != null) updates['objectif'] = objectif;
-
-    if (updates.isEmpty) return;
+    if (prenom != null) updates['prenom'] = prenom;
+    if (nom != null) updates['nom'] = nom;
 
     final response = await httpClient.patch(
       Uri.parse('$baseUrl/api/profile'),
@@ -203,6 +209,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (response.statusCode != 200) {
       throw Exception('Échec de la mise à jour du profil (${response.statusCode})');
     }
+
+    // Le backend renvoie le row `profiles` complet.
+    return UserModel.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override

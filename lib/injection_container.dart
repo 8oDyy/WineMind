@@ -14,6 +14,7 @@ import 'features/auth/domain/usecases/login_user.dart';
 import 'features/auth/domain/usecases/logout_user.dart';
 import 'features/auth/domain/usecases/register_user.dart';
 import 'features/auth/domain/usecases/sign_in_with_google.dart';
+import 'features/auth/domain/usecases/update_profile.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 // AI
@@ -84,6 +85,7 @@ Future<void> init() async {
       getCurrentUser: sl(),
       deleteAccount: sl(),
       signInWithGoogle: sl(),
+      updateProfile: sl(),
     ),
   );
   // Use cases
@@ -93,6 +95,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
   sl.registerLazySingleton(() => DeleteAccount(sl()));
   sl.registerLazySingleton(() => SignInWithGoogle(sl()));
+  sl.registerLazySingleton(() => UpdateProfile(sl()));
   // Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl()),

@@ -25,6 +25,31 @@ class AuthAuthenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
+/// Édition du profil en cours. Étend [AuthAuthenticated] pour que le routage
+/// (SplashGate/MainScreen) continue d'afficher l'app avec l'utilisateur courant
+/// pendant la requête.
+class AuthProfileUpdateInProgress extends AuthAuthenticated {
+  const AuthProfileUpdateInProgress({required super.user});
+}
+
+/// Édition du profil réussie : [user] porte les valeurs à jour (row `profiles`).
+class AuthProfileUpdateSuccess extends AuthAuthenticated {
+  const AuthProfileUpdateSuccess({required super.user});
+}
+
+/// Échec de l'édition du profil : on conserve l'utilisateur courant intact.
+class AuthProfileUpdateFailure extends AuthAuthenticated {
+  final String message;
+
+  const AuthProfileUpdateFailure({
+    required super.user,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [user, message];
+}
+
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }

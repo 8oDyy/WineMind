@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/bubble_painter.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 import 'registration_complete_page.dart';
 
 class ObjectivePage extends StatefulWidget {
-  const ObjectivePage({super.key});
+  /// Niveau + préférences (chaîne "A, B") threadés depuis les étapes précédentes.
+  /// L'objectif est choisi sur cet écran ; la persistance des 3 champs a lieu ici.
+  final String niveau;
+  final String preference;
+
+  const ObjectivePage({
+    super.key,
+    required this.niveau,
+    required this.preference,
+  });
 
   @override
   State<ObjectivePage> createState() => _ObjectivePageState();
@@ -33,21 +46,76 @@ class _ObjectivePageState extends State<ObjectivePage> {
     ),
   ];
 
+  void _saveAndContinue(BuildContext context) {
+    context.read<AuthBloc>().add(UpdateProfileEvent(
+          niveau: widget.niveau,
+          preference: widget.preference.isEmpty ? null : widget.preference,
+          objectif: _options[_selectedIndex].title,
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black),
-        title: const Text(
-          "Objectif d'utilisation",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
+    return BlocConsumer<AuthBloc, AuthState>(
+      // On n'écoute que les sous-états d'édition de profil pour piloter cet
+      // écran ; les autres transitions auth ne nous concernent pas ici.
+      listenWhen: (_, current) =>
+          current is AuthProfileUpdateSuccess ||
+          current is AuthProfileUpdateFailure,
+      listener: (context, state) {
+        if (state is AuthProfileUpdateSuccess) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RegistrationCompletePage(),
+            ),
+          );
+        } else if (state is AuthProfileUpdateFailure) {
+          // L'inscription ne doit pas être un cul-de-sac : on signale l'échec,
+          // on laisse réessayer (bouton réactivé) et on propose de continuer
+          // quand même — le profil pourra être complété plus tard.
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: const Text(
+                  "Impossible d'enregistrer votre profil pour le moment.",
+                ),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 6),
+                action: SnackBarAction(
+                  label: 'Continuer',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegistrationCompletePage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+        }
+      },
+      builder: (context, state) {
+        final isSaving = state is AuthProfileUpdateInProgress;
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: const BackButton(color: Colors.black),
+            title: const Text(
+              "Objectif d'utilisation",
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            centerTitle: true,
+          ),
+          body: SafeArea(
         child: Column(
           children: [
             Expanded(
@@ -229,34 +297,41 @@ class _ObjectivePageState extends State<ObjectivePage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegistrationCompletePage(),
-                          ),
-                        );
-                      },
+                      onPressed:
+                          isSaving ? null : () => _saveAndContinue(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryWine,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor:
+                            AppColors.primaryWine.withValues(alpha: 0.5),
+                        disabledForegroundColor: Colors.white70,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Continuer",
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_forward, size: 18),
-                        ],
-                      ),
+                      child: isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Continuer",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward, size: 18),
+                              ],
+                            ),
                     ),
                   ),
                 ],
@@ -264,7 +339,9 @@ class _ObjectivePageState extends State<ObjectivePage> {
             ),
           ],
         ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -57,3 +57,23 @@ class DeleteAccountEvent extends AuthEvent {
   @override
   List<Object?> get props => [userId];
 }
+
+/// Édition du profil (patch partiel : seuls les champs non-null sont envoyés).
+class UpdateProfileEvent extends AuthEvent {
+  final String? niveau;
+  final String? preference;
+  final String? objectif;
+  final String? prenom;
+  final String? nom;
+
+  const UpdateProfileEvent({
+    this.niveau,
+    this.preference,
+    this.objectif,
+    this.prenom,
+    this.nom,
+  });
+
+  @override
+  List<Object?> get props => [niveau, preference, objectif, prenom, nom];
+}
