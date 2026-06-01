@@ -1,6 +1,22 @@
 import '../../domain/entities/wine.dart';
 
 class WineModel extends Wine {
+  /// Échelle source des niveaux gustatifs (`body_level`/`tannin_level`/
+  /// `fruit_level`) tels que renvoyés par l'API / stockés en base.
+  ///
+  /// Le backend renvoie ces niveaux déjà normalisés dans `[0, 1]`
+  /// (cf. coordination tâches #6/#7), donc l'échelle vaut `1.0`. Si l'échelle
+  /// source changeait (ex. 0–5 ou 0–100), ajuster cette seule constante.
+  static const double gustativeScaleMax = 1.0;
+
+  /// Normalise un niveau gustatif brut vers `[0, 1]`, ou `null` si absent.
+  /// Le `clamp` final est un garde-fou : aucune valeur aberrante ne peut
+  /// saturer / déborder le rendu, même si l'échelle source est mal estimée.
+  static double? _normalizeLevel(dynamic raw) {
+    if (raw is! num) return null;
+    return (raw.toDouble() / gustativeScaleMax).clamp(0.0, 1.0);
+  }
+
   const WineModel({
     super.id,
     super.cellarId,
@@ -24,11 +40,24 @@ class WineModel extends Wine {
     super.bodyLevel,
     super.tanninLevel,
     super.fruitLevel,
+    super.drinkFrom,
+    super.peakYear,
+    super.drinkTo,
+    super.enrichedAt,
     super.imageUrl,
     super.notes,
     super.purchaseDate,
     super.purchasePrice,
   });
+
+  /// Parse une année (`drink_from`/`peak_year`/`drink_to`) : accepte un int
+  /// ou un numérique sous forme de String ('2025'), `null` sinon.
+  static int? _parseYear(dynamic raw) {
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    if (raw is String) return int.tryParse(raw.trim());
+    return null;
+  }
 
   /// Construit un WineModel depuis une row `user_cellar` avec join `wines`.
   factory WineModel.fromCellarJson(Map<String, dynamic> json) {
@@ -71,15 +100,13 @@ class WineModel extends Wine {
       foodPairings: (catalog?['food_pairings'] as List<dynamic>?)
               ?.cast<String>() ??
           const [],
-      bodyLevel: catalog?['body_level'] != null
-          ? (catalog!['body_level'] as num).toDouble()
-          : 0.5,
-      tanninLevel: catalog?['tannin_level'] != null
-          ? (catalog!['tannin_level'] as num).toDouble()
-          : 0.5,
-      fruitLevel: catalog?['fruit_level'] != null
-          ? (catalog!['fruit_level'] as num).toDouble()
-          : 0.5,
+      bodyLevel: _normalizeLevel(catalog?['body_level']),
+      tanninLevel: _normalizeLevel(catalog?['tannin_level']),
+      fruitLevel: _normalizeLevel(catalog?['fruit_level']),
+      drinkFrom: _parseYear(catalog?['drink_from']),
+      peakYear: _parseYear(catalog?['peak_year']),
+      drinkTo: _parseYear(catalog?['drink_to']),
+      enrichedAt: catalog?['enriched_at'] as String?,
       imageUrl: catalog?['image_url'] as String?,
       notes: json['notes'] as String?,
       purchaseDate: json['purchase_date'] as String?,
@@ -113,15 +140,13 @@ class WineModel extends Wine {
       foodPairings: (json['food_pairings'] as List<dynamic>?)
               ?.cast<String>() ??
           const [],
-      bodyLevel: json['body_level'] != null
-          ? (json['body_level'] as num).toDouble()
-          : 0.5,
-      tanninLevel: json['tannin_level'] != null
-          ? (json['tannin_level'] as num).toDouble()
-          : 0.5,
-      fruitLevel: json['fruit_level'] != null
-          ? (json['fruit_level'] as num).toDouble()
-          : 0.5,
+      bodyLevel: _normalizeLevel(json['body_level']),
+      tanninLevel: _normalizeLevel(json['tannin_level']),
+      fruitLevel: _normalizeLevel(json['fruit_level']),
+      drinkFrom: _parseYear(json['drink_from']),
+      peakYear: _parseYear(json['peak_year']),
+      drinkTo: _parseYear(json['drink_to']),
+      enrichedAt: json['enriched_at'] as String?,
       imageUrl: json['image_url'] as String?,
     );
   }

@@ -8,4 +8,8 @@ abstract class WineRepository {
   Future<Either<Failure, void>> addToCellar(Wine wine);
   Future<Either<Failure, void>> removeFromCellar(String cellarId);
   Future<Either<Failure, void>> updateCellarStock(String cellarId, int stock);
+
+  /// Déclenche l'enrichissement IA d'un vin catalogue et renvoie le vin enrichi
+  /// (champs catalogue : profil gustatif, accords, fenêtre de garde, enrichedAt).
+  Future<Either<Failure, Wine>> enrichWine(String wineId);
 }

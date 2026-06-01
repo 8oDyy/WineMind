@@ -19,6 +19,10 @@ abstract class WineRemoteDataSource {
 
   /// Met à jour le stock d'un vin dans la cave.
   Future<void> updateCellarStock(String cellarId, int stock);
+
+  /// Déclenche l'enrichissement IA d'un vin catalogue (profil gustatif,
+  /// accords, fenêtre de garde) et renvoie le vin enrichi.
+  Future<WineModel> enrichWine(String wineId);
 }
 
 class WineRemoteDataSourceImpl implements WineRemoteDataSource {
@@ -155,6 +159,36 @@ class WineRemoteDataSourceImpl implements WineRemoteDataSource {
           );
 
       if (response.statusCode != 200 && response.statusCode != 204) {
+        throw const ServerException();
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<WineModel> enrichWine(String wineId) async {
+    try {
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/api/wine/$wineId/enrich'),
+            headers: _headers,
+          )
+          .timeout(
+            // 1er appel = génération LLM (2–8 s, jusqu'à ~20 s) → marge à 30 s.
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
+
+      if (response.statusCode == 200) {
+        // Réponse enveloppée : { "enriched": bool, "wine": { <row wines> } }.
+        // On parse `wine` (row catalogue brute, iso `fromCatalogJson`).
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final wineJson = body['wine'] as Map<String, dynamic>?;
+        if (wineJson == null) throw const ServerException();
+        return WineModel.fromCatalogJson(wineJson);
+      } else {
         throw const ServerException();
       }
     } catch (e) {

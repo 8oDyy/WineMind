@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/wine.dart';
+import '../../domain/usecases/enrich_wine.dart';
 import '../../domain/usecases/update_wine_stock.dart';
 import '../bloc/wine_detail_bloc.dart';
+import '../bloc/wine_detail_event.dart';
 import '../pages/wine_detail_page.dart';
 
 class WineLastCard extends StatelessWidget {
@@ -21,7 +23,8 @@ class WineLastCard extends StatelessWidget {
             create: (_) => WineDetailBloc(
               wine: wine,
               updateWineStock: sl<UpdateWineStock>(),
-            ),
+              enrichWine: sl<EnrichWine>(),
+            )..add(const EnrichWineEvent()),
             child: const WineDetailPage(),
           ),
         ),
