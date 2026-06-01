@@ -26,8 +26,8 @@ class BottomNavBar extends StatelessWidget {
           label: 'Accueil',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.wine_bar),
-          label: 'Vins',
+          icon: Icon(Icons.explore),
+          label: 'Découvertes',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.store),

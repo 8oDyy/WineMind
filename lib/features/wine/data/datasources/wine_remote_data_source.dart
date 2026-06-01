@@ -2,11 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/exceptions.dart';
+import '../models/wine_category_model.dart';
 import '../models/wine_model.dart';
 
 abstract class WineRemoteDataSource {
   /// Récupère tous les vins de la cave de l'utilisateur connecté.
   Future<List<WineModel>> getUserCellar();
+
+  /// Récupère les recommandations Découvertes groupées par catégorie
+  /// (`GET /api/discovery`, JWT). `limitPerCategory` borne le nombre de vins
+  /// renvoyés par catégorie.
+  Future<List<WineCategoryModel>> getDiscovery({int limitPerCategory});
 
   /// Récupère le dernier vin ajouté à la cave, ou null si cave vide.
   Future<WineModel?> getLastCellarWine();
@@ -61,6 +67,38 @@ class WineRemoteDataSourceImpl implements WineRemoteDataSource {
       if (response.statusCode == 200) {
         return (jsonDecode(response.body) as List)
             .map((e) => WineModel.fromCellarJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw const ServerException();
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<WineCategoryModel>> getDiscovery({int limitPerCategory = 12}) async {
+    try {
+      final response = await client
+          .get(
+            Uri.parse(
+              '$baseUrl/api/discovery?limit_per_category=$limitPerCategory',
+            ),
+            headers: _headers,
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const ServerException(),
+          );
+
+      if (response.statusCode == 200) {
+        // Réponse : { "categories": [ { key, title, subtitle, wines:[...] } ] }.
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final categories = body['categories'] as List<dynamic>? ?? const [];
+        return categories
+            .map((e) =>
+                WineCategoryModel.fromJson(e as Map<String, dynamic>))
             .toList();
       } else {
         throw const ServerException();

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/wine.dart';
+import '../../domain/usecases/add_wine_to_cellar.dart';
 import '../../domain/usecases/enrich_wine.dart';
 import '../../domain/usecases/update_wine_stock.dart';
 import '../bloc/wine_detail_bloc.dart';
@@ -25,6 +26,7 @@ class WineCellarCard extends StatelessWidget {
               wine: wine,
               updateWineStock: sl<UpdateWineStock>(),
               enrichWine: sl<EnrichWine>(),
+              addWineToCellar: sl<AddWineToCellar>(),
             )..add(const EnrichWineEvent()),
             child: const WineDetailPage(),
           ),

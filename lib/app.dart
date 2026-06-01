@@ -14,11 +14,12 @@ import 'features/dishpicture/presentation/bloc/dish_analysis_bloc.dart';
 import 'features/wine_label/presentation/bloc/wine_label_bloc.dart';
 import 'features/auth/presentation/pages/auth_choice_page.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
+import 'features/wine/presentation/bloc/discovery_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/wine/presentation/pages/cellar_page.dart';
 import 'features/home/presentation/pages/home_page.dart';
-import 'features/wine/presentation/pages/wines_page.dart';
+import 'features/wine/presentation/pages/discovery_page.dart';
 import 'injection_container.dart';
 
 class App extends StatelessWidget {
@@ -125,7 +126,11 @@ class _MainScreenState extends State<MainScreen> {
 
   late final List<Widget> _pages = [
     const HomePage(),
-    const WinesPage(),
+    // Onglet « Découvertes » : son DiscoveryBloc (Factory) est fourni localement.
+    BlocProvider(
+      create: (_) => sl<DiscoveryBloc>(),
+      child: const DiscoveryPage(),
+    ),
     const CellarPage(),
     SettingsPage(user: widget.user),
   ];

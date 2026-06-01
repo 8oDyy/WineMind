@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/wine.dart';
+import '../../domain/entities/wine_category.dart';
 import '../../domain/repositories/wine_repository.dart';
 import '../datasources/wine_remote_data_source.dart';
 import '../models/wine_model.dart';
@@ -27,6 +28,20 @@ class WineRepositoryImpl implements WineRepository {
     try {
       final wines = await remoteDataSource.getUserCellar();
       return Right(wines);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Erreur serveur'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<WineCategory>>> getDiscovery({
+    int limitPerCategory = 12,
+  }) async {
+    try {
+      final categories = await remoteDataSource.getDiscovery(
+        limitPerCategory: limitPerCategory,
+      );
+      return Right(categories);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message ?? 'Erreur serveur'));
     }

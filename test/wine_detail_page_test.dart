@@ -7,7 +7,9 @@ import 'package:winemind/features/wine/presentation/widgets/aging_window_chart.d
 import 'package:winemind/features/wine/presentation/widgets/taste_profile_radar.dart';
 import 'package:winemind/core/error/failures.dart';
 import 'package:winemind/features/wine/domain/entities/wine.dart';
+import 'package:winemind/features/wine/domain/entities/wine_category.dart';
 import 'package:winemind/features/wine/domain/repositories/wine_repository.dart';
+import 'package:winemind/features/wine/domain/usecases/add_wine_to_cellar.dart';
 import 'package:winemind/features/wine/domain/usecases/enrich_wine.dart';
 import 'package:winemind/features/wine/domain/usecases/update_wine_stock.dart';
 import 'package:winemind/features/wine/presentation/bloc/wine_detail_bloc.dart';
@@ -91,6 +93,12 @@ class FakeWineRepository implements WineRepository {
   @override
   Future<Either<Failure, Wine>> enrichWine(String wineId) async =>
       const Right(tWine);
+
+  @override
+  Future<Either<Failure, List<WineCategory>>> getDiscovery({
+    int limitPerCategory = 12,
+  }) async =>
+      const Right([]);
 }
 
 Widget _buildSubject(Wine wine) {
@@ -101,6 +109,7 @@ Widget _buildSubject(Wine wine) {
         wine: wine,
         updateWineStock: UpdateWineStock(repo),
         enrichWine: EnrichWine(repo),
+        addWineToCellar: AddWineToCellar(repo),
       ),
       child: const WineDetailPage(),
     ),
@@ -265,6 +274,7 @@ void main() {
                 wine: tWine,
                 updateWineStock: UpdateWineStock(repo),
                 enrichWine: EnrichWine(repo),
+                addWineToCellar: AddWineToCellar(repo),
               ),
               child: const WineDetailPage(currentYear: 2030),
             ),
@@ -447,6 +457,7 @@ void main() {
                         wine: tWine,
                         updateWineStock: useCase,
                         enrichWine: EnrichWine(repo),
+                        addWineToCellar: AddWineToCellar(repo),
                       ),
                       child: const WineDetailPage(),
                     ),
@@ -520,6 +531,7 @@ void main() {
             called++;
             return const Right(enrichedWine);
           })),
+          addWineToCellar: AddWineToCellar(FakeWineRepository()),
         );
 
         bloc.add(const EnrichWineEvent());
@@ -548,6 +560,7 @@ void main() {
             called++;
             return const Right(enrichedWine);
           })),
+          addWineToCellar: AddWineToCellar(FakeWineRepository()),
         );
 
         bloc.add(const EnrichWineEvent());
@@ -565,6 +578,7 @@ void main() {
             called++;
             return const Right(enrichedWine);
           })),
+          addWineToCellar: AddWineToCellar(FakeWineRepository()),
         );
 
         bloc.add(const EnrichWineEvent());
@@ -580,6 +594,7 @@ void main() {
           enrichWine: EnrichWine(
             _StubEnrichRepo(() => Left(ServerFailure('boom'))),
           ),
+          addWineToCellar: AddWineToCellar(FakeWineRepository()),
         );
 
         bloc.add(const EnrichWineEvent());
@@ -613,6 +628,11 @@ class _StubEnrichRepo implements WineRepository {
       const Right(null);
   @override
   Future<Either<Failure, List<Wine>>> getAllWines() async => const Right([]);
+  @override
+  Future<Either<Failure, List<WineCategory>>> getDiscovery({
+    int limitPerCategory = 12,
+  }) async =>
+      const Right([]);
   @override
   Future<Either<Failure, Wine>> getLastWine() async => const Right(tWine);
   @override

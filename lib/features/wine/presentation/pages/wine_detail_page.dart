@@ -66,11 +66,17 @@ class WineDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<WineDetailBloc, WineDetailState>(
       listenWhen: (prev, curr) =>
-          curr is WineDetailLoaded && curr.enrichmentFailed,
+          curr is WineDetailLoaded &&
+          (curr.enrichmentFailed ||
+              curr.addToCellarError != null ||
+              (curr.addedToCellar &&
+                  (prev is! WineDetailLoaded || !prev.addedToCellar))),
       listener: (context, state) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
+        if (state is! WineDetailLoaded) return;
+        final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+
+        if (state.enrichmentFailed) {
+          messenger.showSnackBar(
             SnackBar(
               content: const Text('Échec de la génération du profil.'),
               behavior: SnackBarBehavior.floating,
@@ -82,10 +88,31 @@ class WineDetailPage extends StatelessWidget {
               ),
             ),
           );
+        } else if (state.addToCellarError != null) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(state.addToCellarError!),
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'Réessayer',
+                onPressed: () => context
+                    .read<WineDetailBloc>()
+                    .add(const AddToCellarEvent()),
+              ),
+            ),
+          );
+        } else if (state.addedToCellar) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Vin ajouté à votre cave.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       },
       builder: (context, state) {
         if (state is WineDetailLoaded) {
-          return _buildContent(context, state.wine, state.isEnriching);
+          return _buildContent(context, state);
         }
         if (state is WineDetailError) {
           return Scaffold(
@@ -101,7 +128,12 @@ class WineDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, Wine wine, bool isEnriching) {
+  Widget _buildContent(BuildContext context, WineDetailLoaded state) {
+    final wine = state.wine;
+    // Contexte « Découvertes » : un vin issu d'une reco n'a pas de cellarId.
+    // On masque alors la gestion de stock / « Ouvrir une bouteille » et on
+    // propose à la place un CTA « Ajouter à ma cave ».
+    final isInCellar = wine.cellarId != null;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -111,12 +143,12 @@ class WineDetailPage extends StatelessWidget {
               slivers: [
                 _buildHeader(context, wine),
                 SliverToBoxAdapter(
-                  child: _buildBody(context, wine, isEnriching),
+                  child: _buildBody(context, wine, state.isEnriching, isInCellar),
                 ),
               ],
             ),
           ),
-          _buildBottomActions(context, wine),
+          _buildBottomActions(context, state, isInCellar),
         ],
       ),
     );
@@ -229,7 +261,12 @@ class WineDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, Wine wine, bool isEnriching) {
+  Widget _buildBody(
+    BuildContext context,
+    Wine wine,
+    bool isEnriching,
+    bool isInCellar,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -263,7 +300,10 @@ class WineDetailPage extends StatelessWidget {
             _buildFoodPairings(wine),
             const SizedBox(height: 16),
           ],
-          _buildStockManagement(context, wine),
+          // Gestion de stock seulement pour un vin déjà en cave.
+          if (isInCellar) ...[
+            _buildStockManagement(context, wine),
+          ],
           const SizedBox(height: 100),
         ],
       ),
@@ -800,64 +840,123 @@ class WineDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomActions(BuildContext context, Wine wine) {
+  Widget _buildBottomActions(
+    BuildContext context,
+    WineDetailLoaded state,
+    bool isInCellar,
+  ) {
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _updateStock(context, wine, -1),
-              icon: const Icon(Icons.wine_bar, color: Colors.white),
-              label: const Text(
-                'Ouvrir une bouteille',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryWine,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(
-                Icons.edit_note,
-                color: AppColors.primaryWine,
-              ),
-              label: const Text(
-                'Ajouter une note personnelle',
-                style: TextStyle(
-                  color: AppColors.primaryWine,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: AppColors.primaryWine),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ),
-        ],
+        children: isInCellar
+            ? _cellarActions(context, state.wine)
+            : _discoveryActions(context, state),
       ),
     );
+  }
+
+  /// Actions pour un vin déjà en cave : ouvrir une bouteille + note perso.
+  List<Widget> _cellarActions(BuildContext context, Wine wine) {
+    return [
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => _updateStock(context, wine, -1),
+          icon: const Icon(Icons.wine_bar, color: Colors.white),
+          label: const Text(
+            'Ouvrir une bouteille',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryWine,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            elevation: 0,
+          ),
+        ),
+      ),
+      const SizedBox(height: 10),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () {},
+          icon: const Icon(
+            Icons.edit_note,
+            color: AppColors.primaryWine,
+          ),
+          label: const Text(
+            'Ajouter une note personnelle',
+            style: TextStyle(
+              color: AppColors.primaryWine,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            side: const BorderSide(color: AppColors.primaryWine),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  /// Action pour un vin issu d'une reco (Découvertes) : ajout à la cave.
+  List<Widget> _discoveryActions(BuildContext context, WineDetailLoaded state) {
+    final added = state.addedToCellar;
+    final loading = state.isAddingToCellar;
+    return [
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: (added || loading)
+              ? null
+              : () =>
+                  context.read<WineDetailBloc>().add(const AddToCellarEvent()),
+          icon: loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Icon(
+                  added ? Icons.check : Icons.add,
+                  color: Colors.white,
+                ),
+          label: Text(
+            added ? 'Ajouté à ma cave' : 'Ajouter à ma cave',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryWine,
+            disabledBackgroundColor:
+                AppColors.primaryWine.withValues(alpha: 0.5),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            elevation: 0,
+          ),
+        ),
+      ),
+    ];
   }
 }
