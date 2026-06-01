@@ -21,3 +21,9 @@ class UpdateStockEvent extends WineDetailEvent {
 class EnrichWineEvent extends WineDetailEvent {
   const EnrichWineEvent();
 }
+
+/// Ajoute le vin courant à la cave de l'utilisateur (contexte Découvertes :
+/// le vin n'a pas encore de `cellarId`).
+class AddToCellarEvent extends WineDetailEvent {
+  const AddToCellarEvent();
+}

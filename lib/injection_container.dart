@@ -28,11 +28,14 @@ import 'features/ai/presentation/bloc/chat_bloc.dart';
 import 'features/wine/data/datasources/wine_remote_data_source.dart';
 import 'features/wine/data/repositories/wine_repository_impl.dart';
 import 'features/wine/domain/repositories/wine_repository.dart';
+import 'features/wine/domain/usecases/add_wine_to_cellar.dart' as wine_uc;
 import 'features/wine/domain/usecases/enrich_wine.dart';
 import 'features/wine/domain/usecases/get_all_wines.dart';
+import 'features/wine/domain/usecases/get_discovery.dart';
 import 'features/wine/domain/usecases/get_last_wine.dart';
 import 'features/wine/domain/usecases/update_wine_stock.dart';
 import 'features/wine/presentation/bloc/cellar_bloc.dart';
+import 'features/wine/presentation/bloc/discovery_bloc.dart';
 import 'features/wine/presentation/bloc/wine_bloc.dart';
 
 // DishPicture
@@ -143,11 +146,22 @@ Future<void> init() async {
       getAllWines: sl(),
     ),
   );
+
+  sl.registerFactory(
+    () => DiscoveryBloc(
+      getDiscovery: sl(),
+    ),
+  );
   // Use cases
   sl.registerLazySingleton(() => GetLastWine(sl()));
   sl.registerLazySingleton(() => GetAllWines(sl()));
+  sl.registerLazySingleton(() => GetDiscovery(sl()));
   sl.registerLazySingleton(() => UpdateWineStock(sl()));
   sl.registerLazySingleton(() => EnrichWine(sl()));
+  // AddWineToCellar de la feature `wine` (UseCase<void, Wine> → POST /api/cellar)
+  // — distinct de l'homonyme de wine_label. Utilisé par le CTA « Ajouter à ma
+  // cave » depuis la fiche détail ouverte en contexte Découvertes.
+  sl.registerLazySingleton(() => wine_uc.AddWineToCellar(sl()));
   // Repository
   sl.registerLazySingleton<WineRepository>(
     () => WineRepositoryImpl(remoteDataSource: sl()),
