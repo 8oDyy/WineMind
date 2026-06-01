@@ -91,4 +91,13 @@ class WineRepositoryImpl implements WineRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, Wine>> enrichWine(String wineId) async {
+    try {
+      final wine = await remoteDataSource.enrichWine(wineId);
+      return Right(wine);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Erreur serveur'));
+    }
+  }
 }

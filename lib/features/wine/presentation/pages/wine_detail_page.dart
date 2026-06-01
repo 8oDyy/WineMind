@@ -6,26 +6,57 @@ import '../bloc/wine_detail_bloc.dart';
 import '../bloc/wine_detail_event.dart';
 import '../bloc/wine_detail_state.dart';
 import '../helpers/wine_type_color.dart';
+import '../widgets/aging_window_chart.dart';
+import '../widgets/taste_profile_radar.dart';
 
 class WineDetailPage extends StatelessWidget {
-  const WineDetailPage({super.key});
+  /// Année courante utilisée par le graphique d'apogée. Optionnelle pour
+  /// permettre l'injection en test ; à défaut, l'année système est utilisée.
+  final int? currentYear;
+
+  const WineDetailPage({super.key, this.currentYear});
+
+  int get _resolvedYear => currentYear ?? DateTime.now().year;
+
+  /// Normalise un libellé d'accord pour un matching tolérant (insensible à la
+  /// casse, aux accents et au pluriel) entre la donnée brute et nos icônes.
+  static String _normalizePairing(String pairing) {
+    var s = pairing.toLowerCase().trim();
+    const accents = {
+      'à': 'a', 'â': 'a', 'ä': 'a',
+      'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+      'î': 'i', 'ï': 'i',
+      'ô': 'o', 'ö': 'o',
+      'û': 'u', 'ù': 'u', 'ü': 'u',
+      'ç': 'c',
+    };
+    accents.forEach((k, v) => s = s.replaceAll(k, v));
+    if (s.endsWith('s')) s = s.substring(0, s.length - 1);
+    return s;
+  }
 
   static IconData _foodIcon(String pairing) {
-    switch (pairing) {
-      case 'Viandes':
+    switch (_normalizePairing(pairing)) {
+      case 'viande':
         return Icons.restaurant;
-      case 'Gibier':
+      case 'gibier':
         return Icons.forest;
-      case 'Fromage':
+      case 'fromage':
         return Icons.lunch_dining;
-      case 'Poisson':
+      case 'poisson':
         return Icons.set_meal;
-      case 'Fruits de mer':
+      case 'fruit de mer': // "fruits de mer" → "fruit de mer" après dé-pluralisation
+      case 'fruits de mer':
         return Icons.water;
-      case 'Volaille':
+      case 'volaille':
         return Icons.egg_alt;
-      case 'Salade':
+      case 'salade':
         return Icons.eco;
+      case 'dessert':
+        return Icons.cake;
+      case 'apéritif':
+      case 'aperitif':
+        return Icons.local_bar;
       default:
         return Icons.restaurant;
     }
@@ -33,10 +64,28 @@ class WineDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<WineDetailBloc, WineDetailState>(
+    return BlocConsumer<WineDetailBloc, WineDetailState>(
+      listenWhen: (prev, curr) =>
+          curr is WineDetailLoaded && curr.enrichmentFailed,
+      listener: (context, state) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: const Text('Échec de la génération du profil.'),
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'Réessayer',
+                onPressed: () => context
+                    .read<WineDetailBloc>()
+                    .add(const EnrichWineEvent()),
+              ),
+            ),
+          );
+      },
       builder: (context, state) {
         if (state is WineDetailLoaded) {
-          return _buildContent(context, state.wine);
+          return _buildContent(context, state.wine, state.isEnriching);
         }
         if (state is WineDetailError) {
           return Scaffold(
@@ -52,7 +101,7 @@ class WineDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, Wine wine) {
+  Widget _buildContent(BuildContext context, Wine wine, bool isEnriching) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -62,7 +111,7 @@ class WineDetailPage extends StatelessWidget {
               slivers: [
                 _buildHeader(context, wine),
                 SliverToBoxAdapter(
-                  child: _buildBody(context, wine),
+                  child: _buildBody(context, wine, isEnriching),
                 ),
               ],
             ),
@@ -180,7 +229,7 @@ class WineDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, Wine wine) {
+  Widget _buildBody(BuildContext context, Wine wine, bool isEnriching) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -194,12 +243,73 @@ class WineDetailPage extends StatelessWidget {
           ],
           _buildTechnicalCard(wine),
           const SizedBox(height: 16),
-          _buildTasteProfile(wine),
-          const SizedBox(height: 16),
-          _buildFoodPairings(wine),
-          const SizedBox(height: 16),
+          // Pendant la génération IA : un seul bandeau de loading couvre les
+          // sections enrichies (radar / apogée / accords).
+          if (isEnriching) ...[
+            _buildEnrichingPlaceholder(),
+            const SizedBox(height: 16),
+          ] else ...[
+            _buildTasteProfile(wine),
+            const SizedBox(height: 16),
+            if (AgingWindowChart.isValid(
+                  wine.drinkFrom,
+                  wine.peakYear,
+                  wine.drinkTo,
+                ) ||
+                wine.apogee.trim().isNotEmpty) ...[
+              _buildAgingWindow(wine),
+              const SizedBox(height: 16),
+            ],
+            _buildFoodPairings(wine),
+            const SizedBox(height: 16),
+          ],
           _buildStockManagement(context, wine),
           const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnrichingPlaceholder() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(AppColors.primaryWine),
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Génération du profil…',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Profil gustatif, accords et fenêtre de garde',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+          ),
         ],
       ),
     );
@@ -403,55 +513,122 @@ class WineDetailPage extends StatelessWidget {
               letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 14),
-          _buildProfileBar('Corps', wine.bodyLevel),
-          const SizedBox(height: 10),
-          _buildProfileBar('Tanins', wine.tanninLevel),
-          const SizedBox(height: 10),
-          _buildProfileBar('Fruit', wine.fruitLevel),
+          const SizedBox(height: 8),
+          if (TasteProfileRadar.canRender(
+            wine.bodyLevel,
+            wine.tanninLevel,
+            wine.fruitLevel,
+          ))
+            TasteProfileRadar(
+              bodyLevel: wine.bodyLevel!,
+              tanninLevel: wine.tanninLevel!,
+              fruitLevel: wine.fruitLevel!,
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Profil gustatif non disponible pour ce vin.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileBar(String label, double level) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 52,
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textPrimary,
+  Widget _buildAgingWindow(Wine wine) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FENÊTRE DE GARDE',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
             ),
           ),
-        ),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: level,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primaryWine,
-              ),
-              minHeight: 6,
+          // Graphe numérique : seulement si la fenêtre de garde structurée est
+          // disponible (drink_from/peak_year/drink_to).
+          if (AgingWindowChart.isValid(
+            wine.drinkFrom,
+            wine.peakYear,
+            wine.drinkTo,
+          )) ...[
+            const SizedBox(height: 12),
+            AgingWindowChart(
+              drinkFrom: wine.drinkFrom!,
+              peakYear: wine.peakYear!,
+              drinkTo: wine.drinkTo!,
+              currentYear: _resolvedYear,
             ),
-          ),
-        ),
-      ],
+          ],
+          // Note d'apogée saisie par l'utilisateur (texte libre), affichée en
+          // complément du graphique numérique quand elle est renseignée
+          // (priorité à la donnée utilisateur sur l'IA).
+          if (wine.apogee.trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.sticky_note_2_outlined,
+                    size: 14, color: Colors.grey.shade500),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    wine.apogee,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 
+  /// Construit une énumération française lisible des accords
+  /// (ex. "Viandes, Gibier et Fromage").
+  static String _pairingsSentence(List<String> pairings) {
+    if (pairings.isEmpty) return '';
+    if (pairings.length == 1) return pairings.first;
+    final head = pairings.sublist(0, pairings.length - 1).join(', ');
+    return '$head et ${pairings.last}';
+  }
+
   Widget _buildFoodPairings(Wine wine) {
+    // Cas vin custom / sans accords : on n'affiche rien.
     if (wine.foodPairings.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Text(
             'ACCORDS METS',
             style: TextStyle(
@@ -462,11 +639,31 @@ class WineDetailPage extends StatelessWidget {
             ),
           ),
         ),
+        // Annotation lisible (en plus des icônes).
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+                height: 1.4,
+              ),
+              children: [
+                const TextSpan(text: 'Ce vin se marie bien avec '),
+                TextSpan(
+                  text: _pairingsSentence(wine.foodPairings),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+          ),
+        ),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: wine.foodPairings
-              .take(4)
               .map((pairing) => _buildFoodIcon(pairing))
               .toList(),
         ),

@@ -16,3 +16,8 @@ class UpdateStockEvent extends WineDetailEvent {
   @override
   List<Object?> get props => [cellarId, newStock];
 }
+
+/// Déclenche l'enrichissement IA du vin courant (à l'ouverture de la fiche).
+class EnrichWineEvent extends WineDetailEvent {
+  const EnrichWineEvent();
+}
