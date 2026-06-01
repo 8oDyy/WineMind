@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/config/app_config.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -16,6 +18,9 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
   });
+
+  /// Connexion via Google (flow natif iOS → `signInWithIdToken` Supabase).
+  Future<UserModel> signInWithGoogle();
 
   Future<void> logout();
 
@@ -106,6 +111,65 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     if (response.user == null) {
       throw Exception('Email ou mot de passe incorrect');
+    }
+
+    return UserModel.fromSupabase(response.user!.toJson());
+  }
+
+  @override
+  Future<UserModel> signInWithGoogle() async {
+    // Garde-fou : tant que les client IDs Google ne sont pas renseignés dans
+    // AppConfig, on échoue avec un message clair plutôt qu'une erreur native
+    // opaque côté Google Sign-In.
+    if (!AppConfig.isGoogleSignInConfigured) {
+      throw Exception(
+        'Connexion Google non configurée (client IDs manquants dans AppConfig).',
+      );
+    }
+
+    // ── Choix nonce (contrat aligné avec Supabase) ──
+    // On NE gère PAS de nonce côté Flutter. Le package `google_sign_in` v7 sur
+    // iOS ne permet pas de garantir qu'un nonce custom injecté corresponde au
+    // hash présent dans l'`idToken` renvoyé. Côté Supabase, le provider Google
+    // doit donc être configuré avec **« Skip nonce checks » = ON**, sinon le
+    // token serait rejeté. Les deux côtés sont ainsi cohérents : pas de nonce
+    // ici, vérif nonce désactivée là-bas. (Conforme à l'exemple officiel
+    // Supabase pour le flow natif Flutter.)
+    final googleSignIn = GoogleSignIn.instance;
+
+    // Initialisation du SDK Google : clientId iOS + serverClientId (Web)
+    // attendu par Supabase comme audience du token d'identité.
+    await googleSignIn.initialize(
+      clientId: AppConfig.googleIosClientId,
+      serverClientId: AppConfig.googleWebClientId,
+    );
+
+    // Déclenche le sélecteur de compte natif (peut lever GoogleSignInException
+    // si l'utilisateur annule).
+    final googleUser = await googleSignIn.authenticate(
+      scopeHint: const ['email', 'profile'],
+    );
+
+    final idToken = googleUser.authentication.idToken;
+    if (idToken == null) {
+      throw Exception('Token Google manquant.');
+    }
+
+    // Récupère un access token Google avec les scopes voulus (nécessaire à
+    // Supabase pour échanger l'identité contre une session).
+    const scopes = ['email', 'profile'];
+    final authorization =
+        await googleUser.authorizationClient.authorizationForScopes(scopes) ??
+            await googleUser.authorizationClient.authorizeScopes(scopes);
+
+    final response = await supabase.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: authorization.accessToken,
+    );
+
+    if (response.user == null) {
+      throw Exception('Connexion Google échouée.');
     }
 
     return UserModel.fromSupabase(response.user!.toJson());

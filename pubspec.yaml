@@ -47,6 +47,9 @@ dependencies:
   # Supabase
   supabase_flutter: ^2.9.0
 
+  # Google Sign-In (flow natif iOS → idToken pour signInWithIdToken)
+  google_sign_in: ^7.1.0
+
   # HTTP
   http: ^1.2.2
 
