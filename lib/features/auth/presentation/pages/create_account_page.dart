@@ -278,9 +278,11 @@ class _CreateAccountViewState extends State<_CreateAccountView> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO : Google Sign In
-                  },
+                  onPressed: isLoading
+                      ? null
+                      : () => context
+                          .read<AuthBloc>()
+                          .add(const LoginWithGoogleEvent()),
                   icon: SvgPicture.network(
                     'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
                     height: 20,

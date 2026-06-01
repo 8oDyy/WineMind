@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user_entity.dart';
@@ -43,6 +44,24 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       return Right(user);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> signInWithGoogle() async {
+    try {
+      final user = await remoteDataSource.signInWithGoogle();
+      return Right(user);
+    } on GoogleSignInException catch (e) {
+      // Annulation utilisateur : message neutre (pas une vraie erreur).
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        return const Left(AuthFailure('Connexion Google annulée.'));
+      }
+      return Left(AuthFailure('Erreur Google Sign-In : ${e.description ?? e.code.name}'));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } catch (e) {

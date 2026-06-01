@@ -30,6 +30,20 @@
 	<string>WineMind utilise la caméra pour scanner les étiquettes de bouteilles.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>WineMind accède à la galerie pour importer des photos d'étiquettes.</string>
+	<!-- Google Sign-In (flow natif iOS). Voir docs/google-sign-in-setup.md. -->
+	<key>GIDClientID</key>
+	<string>619170248964-2c6kuq0bdf5s0mfa9pnag34l5epb155g.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.619170248964-2c6kuq0bdf5s0mfa9pnag34l5epb155g</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

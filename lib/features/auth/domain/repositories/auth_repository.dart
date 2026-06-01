@@ -15,6 +15,9 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Connexion via Google (flow natif iOS).
+  Future<Either<Failure, UserEntity>> signInWithGoogle();
+
   Future<Either<Failure, void>> logout();
 
   Future<Either<Failure, void>> updateProfile({
