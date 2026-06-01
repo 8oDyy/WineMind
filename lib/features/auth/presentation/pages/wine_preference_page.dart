@@ -5,7 +5,10 @@ import '../../../../core/widgets/bubble_painter.dart';
 import 'objective_page.dart';
 
 class WinePreferencePage extends StatefulWidget {
-  const WinePreferencePage({super.key});
+  /// Niveau choisi à l'étape précédente, threadé jusqu'à la persistance finale.
+  final String niveau;
+
+  const WinePreferencePage({super.key, required this.niveau});
 
   @override
   State<WinePreferencePage> createState() => _WinePreferencePageState();
@@ -234,10 +237,20 @@ class _WinePreferencePageState extends State<WinePreferencePage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
+                        // Préférence multi → une seule chaîne "A, B" (convention
+                        // partagée avec edit_profile_page, re-split sur ", ").
+                        // Itération dans l'ordre des options pour une chaîne stable.
+                        final preference = [
+                          for (var i = 0; i < _options.length; i++)
+                            if (_selectedIndexes.contains(i)) _options[i].title,
+                        ].join(', ');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ObjectivePage(),
+                            builder: (_) => ObjectivePage(
+                              niveau: widget.niveau,
+                              preference: preference,
+                            ),
                           ),
                         );
                       },

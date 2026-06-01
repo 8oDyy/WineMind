@@ -252,7 +252,9 @@ class _KnowledgeLevelPageState extends State<KnowledgeLevelPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const WinePreferencePage(),
+                            builder: (_) => WinePreferencePage(
+                              niveau: _levels[_selectedIndex].title,
+                            ),
                           ),
                         );
                       },
