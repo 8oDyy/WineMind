@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../../ai/domain/entities/chat_message.dart';
 import '../../../ai/presentation/bloc/chat_bloc.dart';
 import '../../../ai/presentation/bloc/chat_event.dart';
@@ -55,7 +56,7 @@ class _HomePageState extends State<HomePage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous devez être connecté pour prendre une photo')),
+        glassSnackBar('Vous devez être connecté pour prendre une photo'),
       );
       return;
     }

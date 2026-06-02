@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/widgets/glass.dart';
 import '../bloc/wine_label_bloc.dart';
 import '../bloc/wine_label_event.dart';
 import '../bloc/wine_label_state.dart';
@@ -24,10 +25,7 @@ class _WineAddingPageState extends State<WineAddingPage> {
     _timeoutTimer = Timer(const Duration(seconds: 30), () {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Délai d\'attente dépassé'),
-            backgroundColor: Colors.orange,
-          ),
+          glassSnackBar('Délai d\'attente dépassé', isError: true),
         );
         Navigator.of(context).pop();
       }
@@ -67,19 +65,13 @@ class _WineAddingPageState extends State<WineAddingPage> {
             
             // Show success and go back
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
+              glassSnackBar(state.message),
             );
             Navigator.of(context).popUntil((route) => route.isFirst);
           } else if (state is WineLabelError) {
             // Show error and go back
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
+              glassSnackBar(state.message, isError: true),
             );
             Navigator.of(context).pop();
           } else if (state is WineAddingCancelled) {
