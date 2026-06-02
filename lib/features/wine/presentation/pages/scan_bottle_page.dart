@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../wine_label/presentation/bloc/wine_label_bloc.dart';
@@ -45,10 +46,7 @@ class ScanBottlePage extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
-          ),
+          glassSnackBar('Erreur: $e', isError: true),
         );
       }
     }
@@ -85,10 +83,7 @@ class ScanBottlePage extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
-          ),
+          glassSnackBar('Erreur: $e', isError: true),
         );
       }
     }
@@ -119,10 +114,7 @@ class ScanBottlePage extends StatelessWidget {
           } else if (state is WineLabelError) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
+                glassSnackBar(state.message, isError: true),
               );
             }
           }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../domain/entities/wine.dart';
 import '../bloc/wine_detail_bloc.dart';
 import '../bloc/wine_detail_event.dart';
@@ -77,36 +78,29 @@ class WineDetailPage extends StatelessWidget {
 
         if (state.enrichmentFailed) {
           messenger.showSnackBar(
-            SnackBar(
-              content: const Text('Échec de la génération du profil.'),
-              behavior: SnackBarBehavior.floating,
-              action: SnackBarAction(
-                label: 'Réessayer',
-                onPressed: () => context
-                    .read<WineDetailBloc>()
-                    .add(const EnrichWineEvent()),
-              ),
+            glassSnackBar(
+              'Échec de la génération du profil.',
+              isError: true,
+              actionLabel: 'Réessayer',
+              onAction: () => context
+                  .read<WineDetailBloc>()
+                  .add(const EnrichWineEvent()),
             ),
           );
         } else if (state.addToCellarError != null) {
           messenger.showSnackBar(
-            SnackBar(
-              content: Text(state.addToCellarError!),
-              behavior: SnackBarBehavior.floating,
-              action: SnackBarAction(
-                label: 'Réessayer',
-                onPressed: () => context
-                    .read<WineDetailBloc>()
-                    .add(const AddToCellarEvent()),
-              ),
+            glassSnackBar(
+              state.addToCellarError!,
+              isError: true,
+              actionLabel: 'Réessayer',
+              onAction: () => context
+                  .read<WineDetailBloc>()
+                  .add(const AddToCellarEvent()),
             ),
           );
         } else if (state.addedToCellar) {
           messenger.showSnackBar(
-            const SnackBar(
-              content: Text('Vin ajouté à votre cave.'),
-              behavior: SnackBarBehavior.floating,
-            ),
+            glassSnackBar('Vin ajouté à votre cave.'),
           );
         }
       },

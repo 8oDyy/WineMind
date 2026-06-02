@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -78,57 +79,48 @@ class _SettingsBody extends StatelessWidget {
 
   void _confirmLogout(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
-    showDialog(
+    GlassDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Se déconnecter'),
-        content: const Text('Voulez-vous vraiment vous déconnecter ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              authBloc.add(const LogoutEvent());
-            },
-            child: const Text(
-              'Déconnecter',
-              style: TextStyle(color: AppColors.primaryWine),
-            ),
-          ),
-        ],
-      ),
+      title: 'Se déconnecter',
+      message: 'Voulez-vous vraiment vous déconnecter ?',
+      actions: [
+        GlassDialogAction(
+          label: 'Annuler',
+          onPressed: () => Navigator.pop(context),
+        ),
+        GlassDialogAction(
+          label: 'Déconnecter',
+          isDefault: true,
+          onPressed: () {
+            Navigator.pop(context);
+            authBloc.add(const LogoutEvent());
+          },
+        ),
+      ],
     );
   }
 
   void _confirmDelete(BuildContext context, String userId) {
     final authBloc = context.read<AuthBloc>();
-    showDialog(
+    GlassDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Supprimer le compte'),
-        content: const Text(
+      title: 'Supprimer le compte',
+      message:
           'Cette action est irréversible. Toutes vos données seront supprimées.',
+      actions: [
+        GlassDialogAction(
+          label: 'Annuler',
+          onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              authBloc.add(DeleteAccountEvent(userId: userId));
-            },
-            child: const Text(
-              'Supprimer',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+        GlassDialogAction(
+          label: 'Supprimer',
+          isDestructive: true,
+          onPressed: () {
+            Navigator.pop(context);
+            authBloc.add(DeleteAccountEvent(userId: userId));
+          },
+        ),
+      ],
     );
   }
 }
@@ -193,11 +185,9 @@ class _ProfileCard extends StatelessWidget {
   }
 
   void _showProfileDetails(BuildContext context) {
-    showModalBottomSheet(
+    GlassBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _ProfileBottomSheet(user: user),
+      child: _ProfileBottomSheet(user: user),
     );
   }
 }
@@ -235,24 +225,13 @@ class _ProfileBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+    // Le chrome (fond, coins, poignée) est fourni par GlassBottomSheet.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           _Avatar(prenom: user.prenom, nom: user.nom),
           const SizedBox(height: 16),
           Text(

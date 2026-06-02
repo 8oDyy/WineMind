@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -121,22 +122,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (state is AuthProfileUpdateSuccess) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(
-                content: Text('Profil mis à jour'),
-                backgroundColor: AppColors.primaryWine,
-              ),
-            );
+            ..showSnackBar(glassSnackBar('Profil mis à jour'));
           Navigator.of(context).pop();
         } else if (state is AuthProfileUpdateFailure) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            ..showSnackBar(glassSnackBar(state.message, isError: true));
         }
       },
       builder: (context, state) {

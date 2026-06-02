@@ -152,6 +152,9 @@ class _MainScreenState extends State<MainScreen> {
             index: _currentIndex,
             children: _pages,
           ),
+          // Barre « liquid glass » posée (non superposée) : elle réserve sa
+          // place, donc aucun contenu de page n'est masqué. Le flou capte le
+          // fond de l'app sous la barre.
           bottomNavigationBar: BottomNavBar(
             currentIndex: _currentIndex,
             onTap: (i) => setState(() => _currentIndex = i),

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/bubble_painter.dart';
+import '../../../../core/widgets/glass.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -77,25 +78,19 @@ class _ObjectivePageState extends State<ObjectivePage> {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: const Text(
-                  "Impossible d'enregistrer votre profil pour le moment.",
-                ),
-                backgroundColor: Colors.redAccent,
-                behavior: SnackBarBehavior.floating,
+              glassSnackBar(
+                "Impossible d'enregistrer votre profil pour le moment.",
+                isError: true,
                 duration: const Duration(seconds: 6),
-                action: SnackBarAction(
-                  label: 'Continuer',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const RegistrationCompletePage(),
-                      ),
-                    );
-                  },
-                ),
+                actionLabel: 'Continuer',
+                onAction: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegistrationCompletePage(),
+                    ),
+                  );
+                },
               ),
             );
         }

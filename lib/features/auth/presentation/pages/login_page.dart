@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/bubble_painter.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../../app.dart';
 import '../bloc/auth_bloc.dart';
@@ -70,15 +71,7 @@ class _LoginViewState extends State<_LoginView> {
         listener: (context, state) {
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.redAccent,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-              ),
+              glassSnackBar(state.message, isError: true),
             );
           } else if (state is AuthAuthenticated) {
             Navigator.pushAndRemoveUntil(
